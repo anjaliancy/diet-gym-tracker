@@ -53,11 +53,11 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* Cards & Inputs */
+    /* Cards & Form Controls */
     .card { background-color: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
     .card-title { font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: var(--text); display: flex; justify-content: space-between; align-items: center; }
 
-    input, select, textarea, button { background-color: var(--bg); border: 1px solid var(--card-border); color: var(--text); padding: 10px; border-radius: 8px; font-size: 0.9rem; width: 100%; }
+    input, select, textarea, button { background-color: var(--bg); border: 1px solid var(--card-border); color: var(--text); padding: 8px 10px; border-radius: 8px; font-size: 0.85rem; width: 100%; }
     input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); border-color: transparent; }
     button { cursor: pointer; font-weight: 600; border: none; }
     
@@ -66,26 +66,29 @@
     .btn-purple { background-color: #a855f7; color: white; }
     .btn-sm { padding: 4px 10px; font-size: 0.75rem; width: auto; border-radius: 6px; }
     .btn-danger { background-color: transparent; color: var(--danger); border: 1px solid var(--danger); }
-    .btn-danger:hover { background-color: var(--danger); color: white; }
 
-    /* Summary Bar */
+    /* Macro Summary Grid */
     .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
     .stat-box { background: var(--bg); padding: 10px; border-radius: 8px; border: 1px solid var(--card-border); }
     .stat-val { font-size: 1.2rem; font-weight: 700; }
     .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
 
-    /* Meal Option Rows */
-    .meal-block { border-bottom: 1px solid var(--card-border); padding-bottom: 12px; margin-bottom: 12px; }
-    .meal-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-    .meal-row { display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 8px 10px; border-radius: 8px; margin-top: 6px; border: 1px solid var(--card-border); }
-    .meal-details { font-size: 0.8rem; color: var(--text-muted); }
-
-    /* Table for logged entries */
+    /* Tables for Workout & Food Logging */
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.85rem; }
     th, td { padding: 8px; text-align: left; border-bottom: 1px solid var(--card-border); }
     th { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; }
 
-    /* Steps Display */
+    .workout-ex-card { background: var(--bg); border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+    .workout-ex-title { font-weight: 700; font-size: 0.95rem; color: var(--primary); margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .set-row { display: grid; grid-template-columns: 50px 1fr 1fr; gap: 8px; align-items: center; margin-bottom: 6px; }
+
+    /* Meal Sections */
+    .meal-block { border-bottom: 1px solid var(--card-border); padding-bottom: 10px; margin-bottom: 10px; }
+    .meal-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .meal-row { display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 8px 10px; border-radius: 8px; margin-top: 4px; border: 1px solid var(--card-border); }
+    .meal-details { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* Step Display */
     .step-big { font-size: 2.8rem; font-weight: 800; color: var(--accent-green); text-align: center; margin: 12px 0; }
   </style>
 </head>
@@ -106,7 +109,7 @@
     <button class="btn-goal" onclick="incrementGymDay()">+ Log Gym Day</button>
   </div>
 
-  <!-- Tab Bar: Workout Tab First -->
+  <!-- Tab Navigation -->
   <nav>
     <button class="tab-btn active" onclick="switchTab('tab-workout', this)">🏋️ Workout</button>
     <button class="tab-btn" onclick="switchTab('tab-nutrition', this)">🥗 Nutrition</button>
@@ -114,34 +117,39 @@
   </nav>
 
   <main>
-    <!-- TAB 1: WORKOUT -->
+    <!-- TAB 1: WORKOUT SET-BY-SET TRACKER -->
     <div id="tab-workout" class="tab-content active">
       <div class="card">
-        <div class="card-title">Today's Workout Log</div>
-        <p class="subtitle" style="margin-bottom: 12px;">Track your sets, weights, and reps for today.</p>
-        <div style="margin-bottom: 12px;">
-          <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Workout Focus / Session Name</label>
-          <input type="text" id="workout-type" placeholder="e.g. Day 1: Upper 1 (Push/Pull)">
+        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+          <select id="workout-split-select" onchange="loadWorkoutTemplate()">
+            <option value="upper1">Day 1: Upper 1 (Incline DB, Row, OHP, Face Pull)</option>
+            <option value="lower1">Day 2: Lower 1 (Quads & Glutes)</option>
+            <option value="core">Day 3: Core, Mobility & Zone 2 LISS</option>
+            <option value="upper2">Day 4: Upper 2 (Vertical Pull & Chest/Shoulder)</option>
+            <option value="lower2">Day 5: Lower 2 (Posterior Chain & Arms)</option>
+          </select>
         </div>
-        <div style="margin-bottom: 12px;">
-          <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Exercise Log & Sets</label>
-          <textarea id="workout-notes" rows="8" placeholder="• Incline DB Press: 5kgx10, 7.5kgx10, 10kgx4 -> 7.5kgx4&#10;• DB Rows: 7.5kgx10, 10kgx10, 12.5kgx8 -> 10kgx2&#10;• Overhead Press: 5kgx10, 7.5kgx8, 7.5kgx9&#10;• Face Pulls: 15kgx10, 20kgx10, 30kgx2 -> 25kgx8"></textarea>
+
+        <!-- Dynamic Workout Exercise Cards -->
+        <div id="workout-exercises-container">
+          <!-- Populated dynamically with sets, weight, and reps inputs -->
         </div>
-        <button class="btn-primary" onclick="saveWorkout()">Save Workout Session</button>
+
+        <button class="btn-primary" style="margin-top: 10px;" onclick="saveWorkoutLog()">Save Workout Performance</button>
       </div>
     </div>
 
     <!-- TAB 2: NUTRITION LOG -->
     <div id="tab-nutrition" class="tab-content">
       
-      <!-- Date Switcher -->
+      <!-- Date Picker -->
       <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 16px;">
         <label style="font-size: 0.85rem; font-weight: 600;">Date:</label>
         <input type="date" id="log-date" onchange="loadDayData()" style="flex: 1;">
         <button class="btn-sm btn-primary" style="padding: 10px;" onclick="setToday()">Today</button>
       </div>
 
-      <!-- Daily Macro Tracker -->
+      <!-- Macro Summary Header -->
       <div class="card">
         <div class="summary-grid">
           <div class="stat-box">
@@ -159,76 +167,148 @@
         </div>
       </div>
 
-      <!-- Quick Add Pre-Decided Staples -->
+      <!-- Pre-Decided Full Schedule Staples -->
       <div class="card">
-        <div class="card-title">Pre-Decided Staples</div>
+        <div class="card-title">Pre-Decided Planned Meal List</div>
 
-        <!-- Breakfast -->
+        <!-- 1. Breakfast -->
         <div class="meal-block">
-          <div style="font-weight: 600; font-size: 0.9rem; color: var(--accent-orange);">Breakfast</div>
+          <div style="font-weight: 600; font-size: 0.85rem; color: var(--accent-orange);">1. Breakfast</div>
           <div class="meal-row">
             <div>
-              <strong style="font-size: 0.85rem;">Overnight Oats</strong>
+              <strong>Overnight Oats</strong>
               <div class="meal-details">33g Oats, 100ml HL Milk, Chia, Cocoa, Berries</div>
             </div>
             <button class="btn-sm btn-primary" onclick="logItem('Overnight Oats', 225, 9.5)">+ Log (225 kcal)</button>
           </div>
         </div>
 
-        <!-- Coffee -->
+        <!-- 2. Coffee -->
         <div class="meal-block">
-          <div style="font-weight: 600; font-size: 0.9rem; color: var(--accent-orange);">Coffee</div>
+          <div style="font-weight: 600; font-size: 0.85rem; color: var(--accent-orange);">2. Coffee</div>
           <div class="meal-row">
             <div>
-              <strong style="font-size: 0.85rem;">Instant Coffee</strong>
-              <div class="meal-details">½ Sachet 2-in-1 Coffee (No Sugar)</div>
+              <strong>Instant Coffee (No Sugar)</strong>
+              <div class="meal-details">½ Sachet 2-in-1 Coffee</div>
             </div>
             <button class="btn-sm btn-primary" onclick="logItem('Instant Coffee (No Sugar)', 30, 0.5)">+ Log (30 kcal)</button>
           </div>
         </div>
 
-        <!-- Snack -->
+        <!-- 3. Mid-Morning Snack -->
         <div class="meal-block">
-          <div style="font-weight: 600; font-size: 0.9rem; color: var(--accent-orange);">Snack</div>
+          <div style="font-weight: 600; font-size: 0.85rem; color: var(--accent-orange);">3. Mid-Morning Snack</div>
           <div class="meal-row">
             <div>
-              <strong style="font-size: 0.85rem;">Small Mandarin Orange</strong>
-              <div class="meal-details">1 Tiny Fresh Mandarin</div>
+              <strong>Mandarin Orange / Apple</strong>
+              <div class="meal-details">1 Small Fresh Fruit</div>
             </div>
-            <button class="btn-sm btn-primary" onclick="logItem('Small Mandarin Orange', 35, 0.6)">+ Log (35 kcal)</button>
+            <button class="btn-sm btn-primary" onclick="logItem('Small Mandarin/Apple', 35, 0.6)">+ Log (35 kcal)</button>
+          </div>
+        </div>
+
+        <!-- 4. Lunch -->
+        <div class="meal-block">
+          <div style="font-weight: 600; font-size: 0.85rem; color: var(--accent-orange);">4. Lunch</div>
+          <div class="meal-row">
+            <div>
+              <strong>Chapatis + Tofu Bhurji</strong>
+              <div class="meal-details">2 Wheat Chapatis + Veg Tofu Bhurji</div>
+            </div>
+            <button class="btn-sm btn-primary" onclick="logItem('Chapatis + Tofu Bhurji', 400, 24)">+ Log (400 kcal)</button>
+          </div>
+        </div>
+
+        <!-- 5. Pre-Workout -->
+        <div class="meal-block">
+          <div style="font-weight: 600; font-size: 0.85rem; color: var(--accent-orange);">5. Pre-Workout</div>
+          <div class="meal-row">
+            <div>
+              <strong>Bread & Peanut Butter</strong>
+              <div class="meal-details">1 Slice Wheat Bread + 10g PB</div>
+            </div>
+            <button class="btn-sm btn-primary" onclick="logItem('Bread + Peanut Butter', 130, 5)">+ Log (130 kcal)</button>
+          </div>
+        </div>
+
+        <!-- 6. Post-Workout -->
+        <div class="meal-block">
+          <div style="font-weight: 600; font-size: 0.85rem; color: var(--accent-orange);">6. Post-Workout</div>
+          <div class="meal-row">
+            <div>
+              <strong>Plant Protein Shake</strong>
+              <div class="meal-details">38g Protein Powder</div>
+            </div>
+            <button class="btn-sm btn-primary" onclick="logItem('Plant Protein Shake', 140, 23)">+ Log (140 kcal)</button>
+          </div>
+        </div>
+
+        <!-- 7. Afternoon Snack -->
+        <div class="meal-block">
+          <div style="font-weight: 600; font-size: 0.85rem; color: var(--accent-orange);">7. Afternoon Snack</div>
+          <div class="meal-row">
+            <div>
+              <strong>Chobani Yogurt Pouch</strong>
+              <div class="meal-details">1 Pouch (150g)</div>
+            </div>
+            <button class="btn-sm btn-primary" onclick="logItem('Chobani Yogurt Pouch', 90, 15)">+ Log (90 kcal)</button>
+          </div>
+        </div>
+
+        <!-- 8. Dinner -->
+        <div class="meal-block">
+          <div style="font-weight: 600; font-size: 0.85rem; color: var(--accent-orange);">8. Dinner</div>
+          <div class="meal-row">
+            <div>
+              <strong>Onion Paratha + Chicken</strong>
+              <div class="meal-details">1 Paratha + 1 Frozen Chicken Piece</div>
+            </div>
+            <button class="btn-sm btn-primary" onclick="logItem('Onion Paratha + Chicken', 330, 26)">+ Log (330 kcal)</button>
+          </div>
+        </div>
+
+        <!-- 9. Dessert -->
+        <div class="meal-block">
+          <div style="font-weight: 600; font-size: 0.85rem; color: var(--accent-orange);">9. Dessert</div>
+          <div class="meal-row">
+            <div>
+              <strong>Marigold Yogurt + Berries</strong>
+              <div class="meal-details">150g Plain Yogurt + 20g Berries</div>
+            </div>
+            <button class="btn-sm btn-primary" onclick="logItem('Marigold Yogurt + Berries', 110, 6.5)">+ Log (110 kcal)</button>
           </div>
         </div>
       </div>
 
-      <!-- Add Your Own / Deviated Dish Tracker -->
+      <!-- Add Your Own Custom Meal Logger -->
       <div class="card">
         <div class="card-title">Add Custom / Deviated Dish</div>
-        <p class="subtitle" style="margin-bottom: 10px;">Enter details for any dish outside the staple menu.</p>
+        <p class="subtitle" style="margin-bottom: 10px;">If eating outside pre-decided staples, log details and nutritive values here.</p>
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <input type="text" id="custom-name" placeholder="Dish Name (e.g. Dabba Street, Tofu Bhurji)">
+          <input type="text" id="custom-name" placeholder="Dish Name (e.g. Dabba Street, Tofu Sandwich)">
           <div style="display: flex; gap: 8px;">
             <input type="number" id="custom-cals" placeholder="Calories (kcal)">
             <input type="number" id="custom-protein" placeholder="Protein (g)">
           </div>
-          <button class="btn-primary" onclick="addCustomMeal()">+ Add Meal Entry</button>
+          <button class="btn-primary" onclick="addCustomMeal()">+ Add Custom Dish</button>
         </div>
       </div>
 
-      <!-- Add a Regular Manager -->
+      <!-- Save Regular Dish Manager -->
       <div class="card">
         <div class="card-title">Add a Regular Dish?</div>
-        <p class="subtitle" style="margin-bottom: 10px;">Save frequently eaten meals so they appear in your dropdown list.</p>
+        <p class="subtitle" style="margin-bottom: 10px;">Save regular dishes to easily select from the dropdown below.</p>
         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
           <input type="text" id="reg-name" placeholder="Regular Dish Name">
-          <input type="text" id="reg-desc" placeholder="Short Breakdown / Description">
+          <input type="text" id="reg-desc" placeholder="Nutritive Breakdown / Description">
           <div style="display: flex; gap: 8px;">
             <input type="number" id="reg-cals" placeholder="Calories">
             <input type="number" id="reg-protein" placeholder="Protein (g)">
           </div>
-          <button class="btn-purple" onclick="saveRegularDish()">+ Save to Regulars</button>
+          <button class="btn-purple" onclick="saveRegularDish()">Save Regular Meal</button>
         </div>
 
-        <div style="border-top: 1px solid var(--card-border); padding-top: 10px; margin-top: 10px;">
+        <div style="border-top: 1px solid var(--card-border); padding-top: 10px;">
           <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Log from Saved Regulars:</label>
           <div style="display: flex; gap: 8px;">
             <select id="regular-dropdown" style="flex: 1;">
@@ -239,7 +319,7 @@
         </div>
       </div>
 
-      <!-- Logged Food List for Selected Date -->
+      <!-- Logged Food for Selected Day -->
       <div class="card">
         <div class="card-title">Logged Meals (<span id="log-date-title"></span>)</div>
         <table>
@@ -252,7 +332,7 @@
             </tr>
           </thead>
           <tbody id="meal-list-tbody">
-            <!-- Dynamic entries inserted here -->
+            <!-- Dynamic entries -->
           </tbody>
         </table>
       </div>
@@ -263,13 +343,13 @@
     <div id="tab-steps" class="tab-content">
       <div class="card">
         <div class="card-title">Daily Step Counter</div>
-        <p class="subtitle">Track your daily steps for the selected date.</p>
+        <p class="subtitle">Track steps for the selected date.</p>
         
         <div class="step-big" id="step-display-val">0</div>
         
         <div style="margin-bottom: 12px;">
           <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Enter Total Steps</label>
-          <input type="number" id="step-input" placeholder="e.g. 8500">
+          <input type="number" id="step-input" placeholder="e.g. 6600">
         </div>
         <button class="btn-primary" onclick="saveSteps()">Update Steps</button>
       </div>
@@ -279,6 +359,34 @@
   <script>
     const TODAY = new Date().toISOString().split('T')[0];
     let currentDate = TODAY;
+
+    // Workout Templates with exercises and sets (including your drop sets)
+    const workoutTemplates = {
+      upper1: [
+        { name: "Incline DB Bench Press", sets: [{ weight: 5, reps: 10 }, { weight: 7.5, reps: 10 }, { weight: 10, reps: 4 }, { weight: 7.5, reps: 4 }] },
+        { name: "DB Bent Over Rows (Drop Set)", sets: [{ weight: 7.5, reps: 10 }, { weight: 10, reps: 10 }, { weight: 12.5, reps: 8 }, { weight: 10, reps: 2 }] },
+        { name: "Neutral DB Overhead Press", sets: [{ weight: 5, reps: 10 }, { weight: 7.5, reps: 8 }, { weight: 7.5, reps: 9 }] },
+        { name: "Face Pulls", sets: [{ weight: 15, reps: 10 }, { weight: 20, reps: 10 }, { weight: 30, reps: 2 }, { weight: 25, reps: 8 }] }
+      ],
+      lower1: [
+        { name: "Goblet Squats", sets: [{ weight: 10, reps: 10 }, { weight: 12.5, reps: 10 }, { weight: 15, reps: 8 }] },
+        { name: "Walking DB Lunges", sets: [{ weight: 5, reps: 10 }, { weight: 7.5, reps: 10 }] },
+        { name: "Leg Curls", sets: [{ weight: 15, reps: 12 }, { weight: 20, reps: 10 }] }
+      ],
+      core: [
+        { name: "Hanging Leg Raises", sets: [{ weight: 0, reps: 12 }, { weight: 0, reps: 12 }] },
+        { name: "Cable Woodchoppers", sets: [{ weight: 10, reps: 12 }, { weight: 12.5, reps: 12 }] },
+        { name: "Plank Hold (sec)", sets: [{ weight: 0, reps: 101 }] }
+      ],
+      upper2: [
+        { name: "Lat Pulldown / DB Rows", sets: [{ weight: 20, reps: 10 }, { weight: 25, reps: 10 }] },
+        { name: "Flat DB Chest Press", sets: [{ weight: 7.5, reps: 10 }, { weight: 10, reps: 8 }] }
+      ],
+      lower2: [
+        { name: "Romanian Deadlifts (RDLs)", sets: [{ weight: 12.5, reps: 10 }, { weight: 15, reps: 10 }] },
+        { name: "Glute Bridges / DB Thrusts", sets: [{ weight: 15, reps: 12 }, { weight: 20, reps: 10 }] }
+      ]
+    };
 
     let db = JSON.parse(localStorage.getItem('gym_tracker_db')) || {
       gymDays: 73,
@@ -290,6 +398,7 @@
       document.getElementById('log-date').value = currentDate;
       renderGoalHeader();
       renderRegularsDropdown();
+      loadWorkoutTemplate();
       loadDayData();
     }
 
@@ -304,7 +413,7 @@
     function renderGoalHeader() {
       document.getElementById('gym-day-val').innerText = db.gymDays;
       const left = Math.max(0, 100 - db.gymDays);
-      document.getElementById('gym-remaining-sub').innerText = `${left} sessions left to reach 100-day goal!`;
+      document.getElementById('gym-remaining-sub').innerText = `${left} sessions left to reach goal!`;
     }
 
     function incrementGymDay() {
@@ -321,7 +430,7 @@
 
     function getDayRecord(date) {
       if (!db.logs[date]) {
-        db.logs[date] = { meals: [], workout: '', workoutType: '', steps: 0 };
+        db.logs[date] = { meals: [], workoutData: null, steps: 0 };
       }
       return db.logs[date];
     }
@@ -331,13 +440,71 @@
       loadDayData();
     }
 
+    /* Workout Set Render & Log */
+    function loadWorkoutTemplate() {
+      const splitKey = document.getElementById('workout-split-select').value;
+      const dayRecord = getDayRecord(currentDate);
+      
+      // Use saved data if present for today, else load template default
+      const workoutData = (dayRecord.workoutData && dayRecord.workoutData.splitKey === splitKey) 
+        ? dayRecord.workoutData.exercises 
+        : workoutTemplates[splitKey];
+
+      const container = document.getElementById('workout-exercises-container');
+      container.innerHTML = '';
+
+      workoutData.forEach((ex, exIdx) => {
+        const card = document.createElement('div');
+        card.className = 'workout-ex-card';
+        
+        let setsHTML = ex.sets.map((set, sIdx) => `
+          <div class="set-row">
+            <span style="font-size: 0.8rem; font-weight: bold; color: var(--text-muted);">Set ${sIdx + 1}</span>
+            <input type="number" step="0.5" id="ex-${exIdx}-set-${sIdx}-w" value="${set.weight}" placeholder="kg">
+            <input type="number" id="ex-${exIdx}-set-${sIdx}-r" value="${set.reps}" placeholder="reps">
+          </div>
+        `).join('');
+
+        card.innerHTML = `
+          <div class="workout-ex-title">
+            <span>${ex.name}</span>
+            <button class="btn-sm btn-primary" onclick="addSetToExercise(${exIdx})">+ Set</button>
+          </div>
+          <div style="display: grid; grid-template-columns: 50px 1fr 1fr; gap: 8px; margin-bottom: 4px;">
+            <span></span>
+            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Weight (kg)</span>
+            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Reps</span>
+          </div>
+          ${setsHTML}
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function saveWorkoutLog() {
+      const splitKey = document.getElementById('workout-split-select').value;
+      const exercises = workoutTemplates[splitKey].map((ex, exIdx) => {
+        const sets = ex.sets.map((set, sIdx) => {
+          const w = parseFloat(document.getElementById(`ex-${exIdx}-set-${sIdx}-w`).value) || 0;
+          const r = parseInt(document.getElementById(`ex-${exIdx}-set-${sIdx}-r`).value) || 0;
+          return { weight: w, reps: r };
+        });
+        return { name: ex.name, sets };
+      });
+
+      const day = getDayRecord(currentDate);
+      day.workoutData = { splitKey, exercises };
+      saveDB();
+      alert('Workout set performance saved for ' + currentDate);
+    }
+
+    /* Nutrition Functions */
     function loadDayData() {
       currentDate = document.getElementById('log-date').value || TODAY;
       document.getElementById('log-date-title').innerText = currentDate;
 
       const day = getDayRecord(currentDate);
 
-      // Render Nutrition
       const tbody = document.getElementById('meal-list-tbody');
       tbody.innerHTML = '';
       let totCals = 0, totPro = 0;
@@ -364,16 +531,11 @@
       document.getElementById('total-protein').innerText = Math.round(totPro) + 'g';
       document.getElementById('item-count').innerText = day.meals.length;
 
-      // Render Workout
-      document.getElementById('workout-type').value = day.workoutType || '';
-      document.getElementById('workout-notes').value = day.workout || '';
-
-      // Render Steps
+      // Steps
       document.getElementById('step-display-val').innerText = (day.steps || 0).toLocaleString();
       document.getElementById('step-input').value = day.steps || '';
     }
 
-    /* Nutrition Actions */
     function logItem(name, cals, protein) {
       const day = getDayRecord(currentDate);
       day.meals.push({ name, cals, protein });
@@ -445,16 +607,7 @@
       }
     }
 
-    /* Workout Actions */
-    function saveWorkout() {
-      const day = getDayRecord(currentDate);
-      day.workoutType = document.getElementById('workout-type').value;
-      day.workout = document.getElementById('workout-notes').value;
-      saveDB();
-      alert('Workout saved for ' + currentDate);
-    }
-
-    /* Steps Actions */
+    /* Step Counter Actions */
     function saveSteps() {
       const steps = parseInt(document.getElementById('step-input').value) || 0;
       const day = getDayRecord(currentDate);
