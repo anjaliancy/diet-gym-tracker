@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>October Workout & Weight Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .tab-active { border-bottom: 3px solid #10B981; color: #10B981; font-weight: 600; }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-12">
+
+    <!-- Header -->
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                    <i class="fa-solid fa-dumbbell text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white">October Workout & Progressive Overload Log</h1>
+                    <p class="text-xs text-slate-400">5-Day Split • Dedicated Mid-Week Core & Cardio • Double Progression</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3 w-full md:w-auto justify-end">
+                <button onclick="exportToCSV()" class="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm">
+                    <i class="fa-solid fa-file-csv"></i>
+                    <span>Export to Google Sheets (.csv)</span>
+                </button>
+                <button onclick="resetMonthData()" class="flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-2 rounded-lg text-sm font-medium transition">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Reset</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+
+        <!-- Form & Execution Checklist Banner -->
+        <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 mb-6 shadow-md backdrop-blur">
+            <div class="flex items-center justify-between cursor-pointer" onclick="toggleCues()">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-shield-halved text-emerald-400 text-lg"></i>
+                    <h2 class="font-semibold text-slate-200 text-sm md:text-base">Level Up Execution Rules (Form & Progression Reminders)</h2>
+                </div>
+                <i id="cue-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+            </div>
+            <div id="cues-content" class="hidden mt-4 pt-3 border-t border-slate-700/60 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-300">
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+                    <span class="font-semibold text-emerald-400 block mb-1">1. Shoulder Protection</span>
+                    Tuck elbows to 45° (Arrow shape, not 'T' shape) on Bench & Pressing. Neutral grip options protect joints.
+                </div>
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+                    <span class="font-semibold text-emerald-400 block mb-1">2. Mid-Week Core & Active Recovery</span>
+                    Day 3 burns extra calories without draining central nervous system energy, allowing upper/lower muscle groups to recover.
+                </div>
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+                    <span class="font-semibold text-emerald-400 block mb-1">3. Double Progression Method</span>
+                    When you hit top reps on all sets (e.g. 3 x 12 reps), increase weight next session and start back at 8 reps.
+                </div>
+            </div>
+        </div>
+
+        <!-- October Weeks Selector -->
+        <div class="flex overflow-x-auto space-x-2 border-b border-slate-700 pb-2 mb-6 scrollbar-none">
+            <button onclick="switchWeek(1)" id="tab-week-1" class="week-tab px-5 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Week 1 (Oct 1 - Oct 4)</button>
+            <button onclick="switchWeek(2)" id="tab-week-2" class="week-tab px-5 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Week 2 (Oct 5 - Oct 11)</button>
+            <button onclick="switchWeek(3)" id="tab-week-3" class="week-tab px-5 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Week 3 (Oct 12 - Oct 18)</button>
+            <button onclick="switchWeek(4)" id="tab-week-4" class="week-tab px-5 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Week 4 (Oct 19 - Oct 25)</button>
+            <button onclick="switchWeek(5)" id="tab-week-5" class="week-tab px-5 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Week 5 (Oct 26 - Oct 31)</button>
+        </div>
+
+        <!-- Active Week Log Grid -->
+        <div id="workout-container" class="space-y-8">
+            <!-- Programmatically populated by Javascript -->
+        </div>
+
+    </main>
+
+    <script>
+        const workoutData = {
+            "Day 1 - Upper 1": {
+                focus: "Heavy Push / Horizontal Pull Focus",
+                exercises: [
+                    { name: "Incline DB Bench Press (Neutral/45° Grip)", targetReps: "8–10 reps", sets: 3, note: "Tuck elbows 45°; stop 1-2 reps before failure." },
+                    { name: "Chest-Supported or DB Bent-Over Row", targetReps: "8–10 reps", sets: 3, note: "Full stretch at bottom; drive elbows toward hips." },
+                    { name: "Standing / Seated Neutral DB Overhead Press", targetReps: "10–12 reps", sets: 3, note: "Keep palms facing inward to protect shoulders." },
+                    { name: "Cable or Band Face Pulls", targetReps: "12–15 reps", sets: 3, note: "Focus on rear delts & rotator cuff stability." },
+                    { name: "DB Bicep Curls (Superset w/ Tricep Ext.)", targetReps: "10–12 reps", sets: 3, note: "Controlled 3-second lowering phase." },
+                    { name: "Overhead DB Tricep Extension", targetReps: "12–15 reps", sets: 3, note: "Keep elbows tucked forward." }
+                ]
+            },
+            "Day 2 - Lower 1": {
+                focus: "Quads & Glute Extension Focus",
+                exercises: [
+                    { name: "DB Goblet Squat (or Barbell/Hack Squat)", targetReps: "8–10 reps", sets: 3, note: "3-second descent, pause briefly at parallel." },
+                    { name: "Barbell / DB Hip Thrusts", targetReps: "8–12 reps", sets: 3, note: "Squeeze glutes hard at top for 1 full second." },
+                    { name: "DB Bulgarian Split Squat or Reverse Lunge", targetReps: "8–10 reps/side", sets: 3, note: "Leaning slightly forward loads glutes." },
+                    { name: "Seated or Lying Leg Curls", targetReps: "12–15 reps", sets: 3, note: "Control the stretch on the way back out." },
+                    { name: "Standing Calf Raises", targetReps: "15 reps", sets: 3, note: "Full stretch at bottom, squeeze at top." }
+                ]
+            },
+            "Day 3 - Core & Cardio": {
+                focus: "Dedicated Core Circuit, Mobility & Conditioning",
+                exercises: [
+                    { name: "Lying Reverse Crunches or Bench Leg Raises", targetReps: "12–15 reps", sets: 3, note: "Keep lower back flat against mat/bench; lift hips slightly at top." },
+                    { name: "Cable Woodchoppers or Russian Twists", targetReps: "12–15 reps/side", sets: 3, note: "Rotate strictly through torso; lock core stability." },
+                    { name: "Plank / Side Plank Hold", targetReps: "45–60 sec", sets: 3, note: "Keep glutes and abdominal wall fully braced." },
+                    { name: "Zone 2 Cardio (Incline Treadmill Walk / Bike)", targetReps: "20–30 mins", sets: 1, note: "Keep heart rate conversational (~60-70% max HR)." },
+                    { name: "Hip & Thoracic Mobility Flow", targetReps: "8–10 reps/side", sets: 2, note: "Cat-cow, world's greatest stretch, 90/90 hip mobility." }
+                ]
+            },
+            "Day 4 - Upper 2": {
+                focus: "Vertical Pull & Shoulder/Chest Accessories",
+                exercises: [
+                    { name: "Lat Pulldown or Assisted Pull-Ups", targetReps: "8–12 reps", sets: 3, note: "Allow shoulder blades to stretch up fully at top." },
+                    { name: "Flat DB Bench Press (Neutral/Palms In)", targetReps: "10–12 reps", sets: 3, note: "Palms facing each other eliminates shoulder strain." },
+                    { name: "Single-Arm Lat Sweeps / Straight-Arm Pulldowns", targetReps: "12–15 reps", sets: 3, note: "Isolate lats without heavy bicep fatigue." },
+                    { name: "DB Lateral Raises", targetReps: "12–15 reps", sets: 3, note: "Slight forward lean; lead with elbows." },
+                    { name: "DB Hammer Curls", targetReps: "10–12 reps", sets: 3, note: "Great for forearm & bicep thickness." }
+                ]
+            },
+            "Day 5 - Lower 2": {
+                focus: "Hamstring Stretch & Glute Medius Focus",
+                exercises: [
+                    { name: "DB Romanian Deadlifts (RDLs)", targetReps: "8–10 reps", sets: 4, note: "Hinge at hips, keep DBs close to shins. 3s eccentric." },
+                    { name: "Leg Press or DB Step-Ups", targetReps: "10–12 reps", sets: 3, note: "Push through heels to emphasize glutes." },
+                    { name: "Cable Kickbacks or Hip Abductions", targetReps: "12–15 reps", sets: 3, note: "Squeeze outer glute/hip at peak." },
+                    { name: "Lying or Seated Leg Curls", targetReps: "10–12 reps", sets: 3, note: "Isolate hamstrings in stretched position." }
+                ]
+            }
+        };
+
+        let currentWeek = 2; // Default to Week 2 (Oct 5 onwards)
+        let savedLogs = JSON.parse(localStorage.getItem('october_workout_logs')) || {};
+
+        function init() {
+            switchWeek(currentWeek);
+        }
+
+        function toggleCues() {
+            const content = document.getElementById('cues-content');
+            const chevron = document.getElementById('cue-chevron');
+            content.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
+        function switchWeek(weekNum) {
+            currentWeek = weekNum;
+            document.querySelectorAll('.week-tab').forEach((tab, index) => {
+                if (index + 1 === weekNum) {
+                    tab.className = "week-tab px-5 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap bg-emerald-600 text-white shadow-md";
+                } else {
+                    tab.className = "week-tab px-5 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700";
+                }
+            });
+
+            renderWeekWorkouts();
+        }
+
+        function renderWeekWorkouts() {
+            const container = document.getElementById('workout-container');
+            container.innerHTML = '';
+
+            Object.keys(workoutData).forEach(routineName => {
+                const routine = workoutData[routineName];
+                const card = document.createElement('div');
+                card.className = "bg-slate-800/90 border border-slate-700/80 rounded-2xl overflow-hidden shadow-xl";
+
+                let tableRowsHtml = '';
+                routine.exercises.forEach((ex, exIdx) => {
+                    let setsHtml = '';
+                    for (let s = 1; s <= ex.sets; s++) {
+                        const weightKey = `W${currentWeek}_${routineName}_E${exIdx}_S${s}_weight`;
+                        const repsKey = `W${currentWeek}_${routineName}_E${exIdx}_S${s}_reps`;
+
+                        const valWeight = savedLogs[weightKey] !== undefined ? savedLogs[weightKey] : '';
+                        const valReps = savedLogs[repsKey] !== undefined ? savedLogs[repsKey] : '';
+
+                        setsHtml += `
+                            <div class="flex items-center space-x-1.5 bg-slate-900/60 p-1.5 rounded-lg border border-slate-700/50">
+                                <span class="text-[11px] font-semibold text-slate-400 uppercase w-7">Set ${s}</span>
+                                <input type="number" step="0.5" placeholder="kg/min" value="${valWeight}" 
+                                    onchange="saveLog('${weightKey}', this.value)" 
+                                    class="w-14 bg-slate-800 border border-slate-600 rounded px-1.5 py-1 text-xs text-white text-center focus:outline-none focus:border-emerald-400">
+                                <span class="text-slate-500 text-xs">x</span>
+                                <input type="number" placeholder="reps" value="${valReps}" 
+                                    onchange="saveLog('${repsKey}', this.value)" 
+                                    class="w-12 bg-slate-800 border border-slate-600 rounded px-1.5 py-1 text-xs text-white text-center focus:outline-none focus:border-emerald-400">
+                            </div>
+                        `;
+                    }
+
+                    const noteKey = `W${currentWeek}_${routineName}_E${exIdx}_note`;
+                    const valNote = savedLogs[noteKey] !== undefined ? savedLogs[noteKey] : '';
+
+                    tableRowsHtml += `
+                        <tr class="border-b border-slate-700/50 hover:bg-slate-750/30 transition">
+                            <td class="p-3.5 text-xs md:text-sm font-medium text-slate-200">
+                                <div class="font-semibold text-emerald-300">${ex.name}</div>
+                                <div class="text-[11px] text-slate-400 mt-0.5"><i class="fa-regular fa-lightbulb text-amber-400/80 mr-1"></i>${ex.note}</div>
+                            </td>
+                            <td class="p-3.5 text-xs text-slate-300 font-mono whitespace-nowrap">${ex.targetReps}</td>
+                            <td class="p-3.5">
+                                <div class="flex flex-wrap gap-2">
+                                    ${setsHtml}
+                                </div>
+                            </td>
+                            <td class="p-3.5">
+                                <input type="text" placeholder="RPE / Form note" value="${valNote}" 
+                                    onchange="saveLog('${noteKey}', this.value)" 
+                                    class="w-full bg-slate-900/60 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-emerald-400">
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="bg-slate-750 p-4 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div>
+                            <span class="inline-block bg-emerald-500/20 text-emerald-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-500/30 mb-1">
+                                ${routineName}
+                            </span>
+                            <h3 class="text-base font-bold text-white">${routine.focus}</h3>
+                        </div>
+                        <div class="text-xs text-slate-400">
+                            <i class="fa-regular fa-calendar-check mr-1 text-emerald-400"></i> October Week ${currentWeek} Session
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900/40 text-[11px] font-semibold text-slate-400 uppercase border-b border-slate-700">
+                                    <th class="p-3.5 min-w-[220px]">Exercise & Execution Cue</th>
+                                    <th class="p-3.5 min-w-[100px]">Target</th>
+                                    <th class="p-3.5 min-w-[320px]">Weights & Reps Log</th>
+                                    <th class="p-3.5 min-w-[150px]">Session Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function saveLog(key, value) {
+            savedLogs[key] = value;
+            localStorage.setItem('october_workout_logs', JSON.stringify(savedLogs));
+        }
+
+        function exportToCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Week,Routine,Exercise,Target,Set 1 Weight/Min,Set 1 Reps,Set 2 Weight/Min,Set 2 Reps,Set 3 Weight/Min,Set 3 Reps,Notes\n";
+
+            for (let w = 1; w <= 5; w++) {
+                Object.keys(workoutData).forEach(routineName => {
+                    const routine = workoutData[routineName];
+                    routine.exercises.forEach((ex, exIdx) => {
+                        let row = [
+                            `Week ${w}`,
+                            `"${routineName}"`,
+                            `"${ex.name}"`,
+                            `"${ex.targetReps}"`
+                        ];
+
+                        for (let s = 1; s <= 3; s++) {
+                            const wVal = savedLogs[`W${w}_${routineName}_E${exIdx}_S${s}_weight`] || '';
+                            const rVal = savedLogs[`W${w}_${routineName}_E${exIdx}_S${s}_reps`] || '';
+                            row.push(wVal);
+                            row.push(rVal);
+                        }
+
+                        const nVal = (savedLogs[`W${w}_${routineName}_E${exIdx}_note`] || '').replace(/"/g, '""');
+                        row.push(`"${nVal}"`);
+
+                        csvContent += row.join(",") + "\n";
+                    });
+                });
+            }
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `October_2026_Workout_Log.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function resetMonthData() {
+            if (confirm("Are you sure you want to clear all logged weights for October?")) {
+                localStorage.removeItem('october_workout_logs');
+                savedLogs = {};
+                renderWeekWorkouts();
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
