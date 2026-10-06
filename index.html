@@ -25,6 +25,8 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
+    const getTodayStr = () => new Date().toISOString().split('T')[0];
+
     // Default Workout Split Template based on chat history
     const initialWorkoutData = {
       day1: {
@@ -86,17 +88,17 @@
       }
     };
 
-    // Default Mon-Fri Nutrition Plan
+    // Standard Mon-Fri Recommended Nutrition Plan
     const defaultMealPlan = [
-      { id: 1, name: "Overnight Oats (30g oats, 100ml HL milk, chia, berries)", cals: 300, protein: 12, category: "Breakfast", checked: true },
-      { id: 2, name: "2-in-1 No-Sugar Coffee", cals: 60, protein: 0, category: "Morning", checked: true },
-      { id: 3, name: "Fresh Fruit (1 Apple or 1 Orange)", cals: 70, protein: 0, category: "Snack", checked: true },
-      { id: 4, name: "Lunch: 2 Chapatis + Tofu/Egg Bhurji + Veggies & Spinach", cals: 400, protein: 25, category: "Lunch", checked: true },
-      { id: 5, name: "Pre-Workout: 1 Slice Wholemeal Bread + 10g Peanut Butter", cals: 150, protein: 5, category: "Pre-Workout", checked: true },
-      { id: 6, name: "Post-Workout: 1 Scoop Whey Protein Shake", cals: 120, protein: 25, category: "Post-Workout", checked: true },
-      { id: 7, name: "Late Afternoon: 1 Tub Chobani Greek Yogurt", cals: 90, protein: 15, category: "Snack", checked: true },
-      { id: 8, name: "Dinner: 1 Onion Paratha + Pre-Flavored Chicken Breast Fillet", cals: 350, protein: 22, category: "Dinner", checked: true },
-      { id: 9, name: "Post-Dinner: 125g Marigold HL Yogurt + Frozen Berries", cals: 100, protein: 9, category: "Night Snack", checked: true }
+      { id: 1, name: "Overnight Oats (30g oats, 100ml HL milk, chia, berries)", cals: 300, protein: 12, category: "Breakfast" },
+      { id: 2, name: "2-in-1 No-Sugar Coffee", cals: 60, protein: 0, category: "Morning" },
+      { id: 3, name: "Fresh Fruit (1 Apple or 1 Orange)", cals: 70, protein: 0, category: "Snack" },
+      { id: 4, name: "Lunch: 2 Chapatis + Tofu/Egg Bhurji + Veggies & Spinach", cals: 400, protein: 25, category: "Lunch" },
+      { id: 5, name: "Pre-Workout: 1 Slice Wholemeal Bread + 10g Peanut Butter", cals: 150, protein: 5, category: "Pre-Workout" },
+      { id: 6, name: "Post-Workout: 1 Scoop Whey Protein Shake", cals: 120, protein: 25, category: "Post-Workout" },
+      { id: 7, name: "Late Afternoon: 1 Tub Chobani Greek Yogurt", cals: 90, protein: 15, category: "Snack" },
+      { id: 8, name: "Dinner: 1 Paratha + Chicken Breast / Dabba Portion", cals: 420, protein: 28, category: "Dinner" },
+      { id: 9, name: "Post-Dinner: 125g Marigold HL Yogurt + Frozen Berries", cals: 100, protein: 9, category: "Night Snack" }
     ];
 
     function App() {
@@ -104,7 +106,7 @@
       const [selectedWeek, setSelectedWeek] = useState('Week 2');
       const [selectedDay, setSelectedDay] = useState('day1');
       
-      // Gym Counter State (Start at 73 based on chat history)
+      // Gym Counter State
       const [gymDays, setGymDays] = useState(() => {
         const saved = localStorage.getItem('fitpulse_gym_days');
         return saved ? parseInt(saved, 10) : 73;
@@ -122,13 +124,16 @@
         return saved ? JSON.parse(saved) : initialWorkoutData;
       });
 
-      // Nutrition Data
-      const [meals, setMeals] = useState(() => {
-        const saved = localStorage.getItem('fitpulse_meals');
-        return saved ? JSON.parse(saved) : defaultMealPlan;
+      // Date-based Food Logging
+      const [selectedDate, setSelectedDate] = useState(getTodayStr());
+      const [dailyLogs, setDailyLogs] = useState(() => {
+        const saved = localStorage.getItem('fitpulse_daily_food_logs');
+        if (saved) return JSON.parse(saved);
+        // Pre-populate today with the standard plan
+        return { [getTodayStr()]: defaultMealPlan };
       });
 
-      const [customMeal, setCustomMeal] = useState({ name: '', cals: '', protein: '' });
+      const [customMeal, setCustomMeal] = useState({ name: '', cals: '', protein: '', category: 'Lunch' });
 
       // LocalStorage Persistence
       useEffect(() => {
@@ -144,10 +149,10 @@
       }, [workoutLogs]);
 
       useEffect(() => {
-        localStorage.setItem('fitpulse_meals', JSON.stringify(meals));
-      }, [meals]);
+        localStorage.setItem('fitpulse_daily_food_logs', JSON.stringify(dailyLogs));
+      }, [dailyLogs]);
 
-      // Handlers for Workout Editing
+      // Workout Log Handlers
       const handleSetChange = (dayKey, exIndex, setIndex, field, value) => {
         const updated = { ...workoutLogs };
         updated[dayKey].exercises[exIndex].sets[setIndex][field] = value;
@@ -168,15 +173,17 @@
         setWorkoutLogs(updated);
       };
 
-      // Nutrition Calculations
-      const totalCals = meals.filter(m => m.checked).reduce((acc, curr) => acc + Number(curr.cals || 0), 0);
-      const totalProtein = meals.filter(m => m.checked).reduce((acc, curr) => acc + Number(curr.protein || 0), 0);
+      // Current Date Meals
+      const currentMeals = dailyLogs[selectedDate] || [];
 
-      const toggleMeal = (id) => {
-        setMeals(meals.map(m => m.id === id ? { ...m, checked: !m.checked } : m));
-      };
+      // Nutrition Calculations for Active Selected Date
+      const totalCals = currentMeals.reduce((acc, curr) => acc + Number(curr.cals || 0), 0);
+      const totalProtein = currentMeals.reduce((acc, curr) => acc + Number(curr.protein || 0), 0);
+      const calTarget = 1600;
+      const proteinTarget = 115;
+      const calDiff = totalCals - calTarget;
 
-      const addMealItem = (e) => {
+      const addFoodItem = (e) => {
         e.preventDefault();
         if (!customMeal.name) return;
         const newItem = {
@@ -184,11 +191,24 @@
           name: customMeal.name,
           cals: Number(customMeal.cals) || 0,
           protein: Number(customMeal.protein) || 0,
-          category: "Custom",
-          checked: true
+          category: customMeal.category || "General"
         };
-        setMeals([...meals, newItem]);
-        setCustomMeal({ name: '', cals: '', protein: '' });
+        const updatedDateLog = [...currentMeals, newItem];
+        setDailyLogs({ ...dailyLogs, [selectedDate]: updatedDateLog });
+        setCustomMeal({ name: '', cals: '', protein: '', category: 'Lunch' });
+      };
+
+      const removeFoodItem = (id) => {
+        const updatedDateLog = currentMeals.filter(item => item.id !== id);
+        setDailyLogs({ ...dailyLogs, [selectedDate]: updatedDateLog });
+      };
+
+      const loadStandardPlan = () => {
+        setDailyLogs({ ...dailyLogs, [selectedDate]: [...defaultMealPlan] });
+      };
+
+      const clearSelectedDateLog = () => {
+        setDailyLogs({ ...dailyLogs, [selectedDate]: [] });
       };
 
       const exportToCSV = () => {
@@ -244,13 +264,15 @@
               </div>
             </div>
 
-            {/* Quick Macro Summary Dashboard */}
+            {/* Quick Macro Summary Dashboard for Selected Date */}
             <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-5 pt-4 border-t border-slate-700/60">
               <div className="bg-slate-900/60 p-2.5 sm:p-3 rounded-lg border border-slate-700">
-                <div className="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Calories</div>
-                <div className="text-base sm:text-xl font-bold text-amber-400">{totalCals} <span className="text-[10px] font-normal text-slate-400">/ 1600 kcal</span></div>
+                <div className="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Calories ({selectedDate === getTodayStr() ? 'Today' : selectedDate})</div>
+                <div className={`text-base sm:text-xl font-bold ${calDiff > 0 ? 'text-rose-400' : 'text-amber-400'}`}>
+                  {totalCals} <span className="text-[10px] font-normal text-slate-400">/ 1600 kcal</span>
+                </div>
                 <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                  <div className="bg-amber-400 h-full transition-all duration-300" style={{ width: `${Math.min((totalCals / 1600) * 100, 100)}%` }}></div>
+                  <div className={`h-full transition-all duration-300 ${calDiff > 0 ? 'bg-rose-500' : 'bg-amber-400'}`} style={{ width: `${Math.min((totalCals / 1600) * 100, 100)}%` }}></div>
                 </div>
               </div>
 
@@ -284,7 +306,7 @@
               onClick={() => setActiveTab('nutrition')}
               className={`flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition ${activeTab === 'nutrition' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
             >
-              🥗 Daily Fuel & Meals
+              🥗 Daily Food Tracker
             </button>
             <button
               onClick={() => setActiveTab('progress')}
@@ -420,93 +442,182 @@
             </div>
           )}
 
-          {/* TAB 2: NUTRITION & MEAL PLANNER */}
+          {/* TAB 2: DAILY NUTRITION & DEVIATION TRACKER */}
+          {}
           {activeTab === 'nutrition' && (
             <div className="space-y-6">
               
-              {/* Daily Meal Checklist */}
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 sm:p-6 space-y-4">
-                <div className="flex justify-between items-center">
+              {/* Date Selection & Deviation Status Header */}
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 sm:p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <div>
-                    <h2 className="text-lg sm:text-xl font-bold text-white">Monday–Friday Deficit Meal Plan</h2>
-                    <p className="text-xs text-slate-400">Target: ~1,500 - 1,650 kcal | Protein: 105 - 120g</p>
+                    <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                      📅 Daily Food & Deviation Log
+                    </h2>
+                    <p className="text-xs text-slate-400">Log actual items consumed to see exact calorie & protein variance.</p>
                   </div>
-                  <button
-                    onClick={() => setMeals(defaultMealPlan)}
-                    className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-600"
-                  >
-                    Reset Plan
-                  </button>
+
+                  {/* Date Selector Controls */}
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={() => setSelectedDate(getTodayStr())}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition ${selectedDate === getTodayStr() ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'}`}
+                    >
+                      Today
+                    </button>
+                    <input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-emerald-400 font-bold outline-none focus:border-emerald-500"
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  {meals.map(item => (
-                    <div
-                      key={item.id}
-                      onClick={() => toggleMeal(item.id)}
-                      className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${item.checked ? 'bg-slate-900/90 border-slate-700' : 'bg-slate-900/30 border-slate-800 opacity-50'}`}
+                {/* Calorie Status Banner */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 rounded-xl border bg-slate-900/80 border-slate-700 gap-2">
+                  <div className="flex items-center gap-2">
+                    {calDiff > 0 ? (
+                      <span className="text-xs font-bold text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/30">
+                        ⚠️ Over Budget by +{calDiff} kcal
+                      </span>
+                    ) : (
+                      <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/30">
+                        ✅ On Track ({Math.abs(calDiff)} kcal remaining)
+                      </span>
+                    )}
+                    <span className="text-xs text-slate-400 font-medium">
+                      Total: <strong className="text-white">{totalCals} kcal</strong> | Protein: <strong className="text-emerald-400">{totalProtein}g</strong>
+                    </span>
+                  </div>
+
+                  {/* Template Quick Actions */}
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <button
+                      onClick={loadStandardPlan}
+                      className="text-[11px] bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 px-3 py-1 rounded-lg border border-emerald-500/30 font-semibold transition"
+                      title="Reset or fill this day with your standard Mon-Fri meal plan"
                     >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          checked={item.checked}
-                          onChange={() => {}}
-                          className="w-4 h-4 accent-emerald-500 rounded"
-                        />
-                        <div>
-                          <div className={`text-xs sm:text-sm font-semibold ${item.checked ? 'text-slate-100' : 'text-slate-500 line-through'}`}>
-                            {item.name}
-                          </div>
-                          <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded uppercase font-bold">
-                            {item.category}
+                      📋 Load Standard Plan
+                    </button>
+                    <button
+                      onClick={clearSelectedDateLog}
+                      className="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 transition"
+                    >
+                      🗑️️ Clear Day
+                    </button>
+                  </div>
+                </div>
+
+                {/* Logged Food Items List */}
+                <div className="space-y-2 pt-2">
+                  <div className="text-xs font-bold text-slate-300 flex justify-between items-center px-1">
+                    <span>Logged Meals for {selectedDate} ({currentMeals.length} items)</span>
+                  </div>
+
+                  {currentMeals.length === 0 ? (
+                    <div className="text-center py-8 bg-slate-900/40 rounded-xl border border-dashed border-slate-700 space-y-2">
+                      <div className="text-2xl">🥣</div>
+                      <div className="text-xs text-slate-400 font-medium">No meals logged for this date yet.</div>
+                      <button
+                        onClick={loadStandardPlan}
+                        className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg transition"
+                      >
+                        Load Standard 1500 kcal Diet Plan
+                      </button>
+                    </div>
+                  ) : (
+                    currentMeals.map(item => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-3 bg-slate-900/90 rounded-xl border border-slate-700/80 hover:border-slate-600 transition"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded-md font-bold border border-slate-700 min-w-[70px] text-center">
+                            {item.category || "Meal"}
                           </span>
+                          <div>
+                            <div className="text-xs sm:text-sm font-semibold text-slate-100">
+                              {item.name}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="text-xs sm:text-sm font-bold text-amber-400">{item.cals} kcal</div>
+                            <div className="text-[10px] sm:text-xs text-emerald-400 font-semibold">{item.protein}g protein</div>
+                          </div>
+                          <button
+                            onClick={() => removeFoodItem(item.id)}
+                            className="text-slate-500 hover:text-rose-400 text-sm font-bold px-1 transition"
+                            title="Delete Food Item"
+                          >
+                            ✕
+                          </button>
                         </div>
                       </div>
-
-                      <div className="text-right">
-                        <div className="text-xs sm:text-sm font-bold text-amber-400">{item.cals} kcal</div>
-                        <div className="text-[10px] sm:text-xs text-emerald-400 font-semibold">{item.protein}g protein</div>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
 
-                {/* Add Custom Snack Form */}
-                <form onSubmit={addMealItem} className="pt-4 border-t border-slate-700/60 space-y-3">
-                  <div className="text-xs font-bold text-slate-300">Add Extra Food / Meal Item</div>
+                {/* Add Custom Food / Deviation Form */}
+                {}
+                <form onSubmit={addFoodItem} className="pt-4 border-t border-slate-700/60 space-y-3">
+                  <div className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                    <span>➕ Log Food Item or Deviation</span>
+                    <span className="text-[10px] text-slate-400 font-normal">(Add extra eating out, snacks, or custom meals)</span>
+                  </div>
+
                   <div className="grid grid-cols-12 gap-2">
                     <input
                       type="text"
-                      placeholder="Food item name (e.g., Apple, Latte)"
+                      placeholder="Food item name (e.g. McSpicy, Chicken Rice, Latte)"
                       value={customMeal.name}
                       onChange={(e) => setCustomMeal({ ...customMeal, name: e.target.value })}
-                      className="col-span-6 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                      className="col-span-12 sm:col-span-5 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
                     />
+
+                    <select
+                      value={customMeal.category}
+                      onChange={(e) => setCustomMeal({ ...customMeal, category: e.target.value })}
+                      className="col-span-6 sm:col-span-3 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-emerald-500 font-medium"
+                    >
+                      <option value="Breakfast">Breakfast</option>
+                      <option value="Lunch">Lunch</option>
+                      <option value="Dinner">Dinner</option>
+                      <option value="Snack">Snack</option>
+                      <option value="Pre-Workout">Pre-Workout</option>
+                      <option value="Post-Workout">Post-Workout</option>
+                    </select>
+
                     <input
                       type="number"
                       placeholder="Calories"
                       value={customMeal.cals}
                       onChange={(e) => setCustomMeal({ ...customMeal, cals: e.target.value })}
-                      className="col-span-3 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                      className="col-span-3 sm:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
                     />
+
                     <input
                       type="number"
                       placeholder="Protein (g)"
                       value={customMeal.protein}
                       onChange={(e) => setCustomMeal({ ...customMeal, protein: e.target.value })}
-                      className="col-span-3 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                      className="col-span-3 sm:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
                     />
                   </div>
+
                   <button
                     type="submit"
-                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 rounded-lg transition"
+                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 rounded-lg transition shadow"
                   >
-                    + Add Item
+                    + Add Item to {selectedDate} Log
                   </button>
                 </form>
               </div>
 
-              {/* Steps Tracker Settings */}
+              {/* Daily Steps Tracker Settings */}
               <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <h3 className="font-bold text-white text-base">Daily Steps Tracker</h3>
