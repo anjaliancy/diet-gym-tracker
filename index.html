@@ -12,7 +12,6 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
     body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
-    /* Custom scrollbar for modern feel */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #1e293b; }
     ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
@@ -27,19 +26,42 @@
 
     const getTodayStr = () => new Date().toISOString().split('T')[0];
 
-    // Default Workout Split Template based on chat history
+    const MEAL_SLOTS = [
+      "Breakfast",
+      "Mid-Morning",
+      "Lunch",
+      "Pre-Workout",
+      "Post-Workout",
+      "Afternoon Snack",
+      "Dinner",
+      "Night Snack"
+    ];
+
+    const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+    // Default Mon-Fri Standard Meal Template
+    const defaultMealPlan = [
+      { id: 1, name: "Overnight Oats (30g oats, 100ml HL milk, chia, berries)", cals: 300, protein: 12, slot: "Breakfast" },
+      { id: 2, name: "1 Apple or 1 Orange", cals: 70, protein: 0, slot: "Mid-Morning" },
+      { id: 3, name: "Dabba Street Leftovers / Tofu Egg Bhurji + 2 Chapatis", cals: 400, protein: 25, slot: "Lunch" },
+      { id: 4, name: "1 Slice Wholemeal Bread + 10g Peanut Butter", cals: 150, protein: 5, slot: "Pre-Workout" },
+      { id: 5, name: "1 Scoop Whey Protein Shake", cals: 120, protein: 25, slot: "Post-Workout" },
+      { id: 6, name: "1 Tub Chobani Greek Yogurt", cals: 90, protein: 15, slot: "Afternoon Snack" },
+      { id: 7, name: "Dabba Street Dinner / 1 Paratha + Chicken Breast", cals: 420, protein: 28, slot: "Dinner" },
+      { id: 8, name: "125g Marigold HL Yogurt + Frozen Berries", cals: 100, protein: 9, slot: "Night Snack" }
+    ];
+
     const initialWorkoutData = {
       day1: {
         title: "Day 1: Upper 1 (Push / Horizontal Pull)",
         focus: "Chest, Back, Shoulders & Arms",
         exercises: [
           { name: "Incline DB Bench Press", formCue: "45° elbow tuck, 2-3s lowering tempo", target: "3 sets × 8-10 reps", sets: [{ weight: "7.5", reps: "10" }, { weight: "10", reps: "4" }, { weight: "7.5", reps: "4" }] },
-          { name: "Single-Arm DB Rows (Drop Set Friendly)", formCue: "Deep stretch at bottom, elbow to hip", target: "3 sets × 8-10 reps", sets: [{ weight: "10", reps: "10" }, { weight: "12.5", reps: "8" }, { weight: "10", reps: "2" }] },
+          { name: "Single-Arm DB Rows", formCue: "Deep stretch at bottom, elbow to hip", target: "3 sets × 8-10 reps", sets: [{ weight: "10", reps: "10" }, { weight: "12.5", reps: "8" }, { weight: "10", reps: "2" }] },
           { name: "Neutral DB Shoulder Press", formCue: "Palms facing in to protect shoulders", target: "3 sets × 8-10 reps", sets: [{ weight: "5", reps: "10" }, { weight: "7.5", reps: "8" }, { weight: "7.5", reps: "9" }] },
           { name: "Cable/Band Face Pulls", formCue: "Pull rope to forehead, flare elbows high", target: "3 sets × 12-15 reps", sets: [{ weight: "15", reps: "10" }, { weight: "20", reps: "10" }, { weight: "25", reps: "8" }] },
-          { name: "DB Bicep Curls (Simultaneous / Alt)", formCue: "Squeeze bicep at top, slow descent", target: "3 sets × 10-12 reps", sets: [{ weight: "5", reps: "10" }, { weight: "7.5", reps: "6" }, { weight: "7.5", reps: "6" }] },
-          { name: "Overhead DB Tricep Extension", formCue: "Keep elbows tucked forward", target: "3 sets × 10-12 reps", sets: [{ weight: "7.5", reps: "10" }, { weight: "10", reps: "8" }, { weight: "10", reps: "10" }] },
-          { name: "Optional Core: Lying Reverse Crunches / Plank", formCue: "Control hip tuck, drive lower back to pad", target: "2-3 sets to near failure", sets: [{ weight: "BW", reps: "35" }, { weight: "Plank", reps: "101 sec" }] }
+          { name: "DB Bicep Curls", formCue: "Squeeze bicep at top, slow descent", target: "3 sets × 10-12 reps", sets: [{ weight: "5", reps: "10" }, { weight: "7.5", reps: "6" }, { weight: "7.5", reps: "6" }] },
+          { name: "Overhead DB Tricep Extension", formCue: "Keep elbows tucked forward", target: "3 sets × 10-12 reps", sets: [{ weight: "7.5", reps: "10" }, { weight: "10", reps: "8" }, { weight: "10", reps: "10" }] }
         ]
       },
       day2: {
@@ -48,64 +70,43 @@
         exercises: [
           { name: "DB Goblet / Barbell Squat", formCue: "Keep chest proud, knee inline with toes", target: "3-4 sets × 6-8 reps", sets: [{ weight: "12", reps: "8" }, { weight: "14", reps: "8" }, { weight: "14", reps: "8" }] },
           { name: "Barbell / DB Hip Thrusts", formCue: "Chin tucked, squeeze glutes hard at peak", target: "3-4 sets × 8-12 reps", sets: [{ weight: "20", reps: "12" }, { weight: "25", reps: "10" }, { weight: "25", reps: "10" }] },
-          { name: "Bulgarian Split Squats / Reverse Lunges", formCue: "Slight forward torso lean for glute drive", target: "3 sets × 8-10 reps/leg", sets: [{ weight: "6", reps: "10" }, { weight: "8", reps: "8" }, { weight: "8", reps: "8" }] },
-          { name: "Seated or Lying Leg Curls", formCue: "Squeeze hamstrings, 2s slow release", target: "3 sets × 12-15 reps", sets: [{ weight: "20", reps: "12" }, { weight: "25", reps: "12" }, { weight: "25", reps: "10" }] },
-          { name: "Plank Shoulder Taps / Deadbugs", formCue: "Keep hips level, pull belly button in", target: "3 sets × 45s or 12 reps", sets: [{ weight: "BW", reps: "45s" }, { weight: "BW", reps: "45s" }] }
+          { name: "Bulgarian Split Squats", formCue: "Slight forward torso lean for glute drive", target: "3 sets × 8-10 reps/leg", sets: [{ weight: "6", reps: "10" }, { weight: "8", reps: "8" }, { weight: "8", reps: "8" }] },
+          { name: "Seated or Lying Leg Curls", formCue: "Squeeze hamstrings, 2s slow release", target: "3 sets × 12-15 reps", sets: [{ weight: "20", reps: "12" }, { weight: "25", reps: "12" }, { weight: "25", reps: "10" }] }
         ]
       },
       day3: {
         title: "Day 3: Core, Cardio & Conditioning",
         focus: "Active Recovery & Core Endurance",
         exercises: [
-          { name: "Core Circuit 1: Reverse Crunches / Flat Bench Knee Raises", formCue: "Exhale on lift, slow lower", target: "3 sets × 15 reps", sets: [{ weight: "BW", reps: "15" }, { weight: "BW", reps: "15" }, { weight: "BW", reps: "15" }] },
-          { name: "Core Circuit 2: Cable Woodchoppers / Rotational Core", formCue: "Pivot hips, brace core through turn", target: "3 sets × 12 reps/side", sets: [{ weight: "7.5", reps: "12" }, { weight: "10", reps: "12" }, { weight: "10", reps: "12" }] },
-          { name: "Core Circuit 3: Extended Forearm Plank Hold", formCue: "Squeeze glutes & quads tight", target: "3 sets × 60s max hold", sets: [{ weight: "BW", reps: "60s" }, { weight: "BW", reps: "60s" }] },
-          { name: "Zone 2 LISS Cardio: Incline Treadmill Walk", formCue: "Speed 4.0-4.5 km/h, Incline 6-10%", target: "25-30 minutes continuous", sets: [{ weight: "Incline 8%", reps: "25 min" }] },
-          { name: "Hip & Thoracic Mobility Flow", formCue: "World's greatest stretch & cat-cow", target: "5-10 minutes", sets: [{ weight: "BW", reps: "10 min" }] }
+          { name: "Reverse Crunches / Knee Raises", formCue: "Exhale on lift, slow lower", target: "3 sets × 15 reps", sets: [{ weight: "BW", reps: "15" }, { weight: "BW", reps: "15" }] },
+          { name: "Cable Woodchoppers", formCue: "Pivot hips, brace core through turn", target: "3 sets × 12 reps/side", sets: [{ weight: "7.5", reps: "12" }, { weight: "10", reps: "12" }] },
+          { name: "Zone 2 LISS Cardio Treadmill Walk", formCue: "Speed 4.0-4.5 km/h, Incline 6-10%", target: "25-30 minutes continuous", sets: [{ weight: "Incline 8%", reps: "25 min" }] }
         ]
       },
       day4: {
         title: "Day 4: Upper 2 (Vertical Pull & Accessories)",
         focus: "Lats, Upper Back & Lateral Delts",
         exercises: [
-          { name: "Lat Pulldown / Single-Arm Cable Row", formCue: "Full overhead stretch, drive elbow to rib", target: "3-4 sets × 8-12 reps", sets: [{ weight: "25", reps: "12" }, { weight: "30", reps: "10" }, { weight: "30", reps: "8" }] },
-          { name: "Flat DB Bench Press / DB Flyes", formCue: "Soft elbows on flyes, deep chest stretch", target: "3 sets × 10-12 reps", sets: [{ weight: "8", reps: "12" }, { weight: "10", reps: "10" }, { weight: "10", reps: "8" }] },
-          { name: "Straight-Arm Lat Sweeps / Cable Pulldowns", formCue: "Lock arms straight, sweep bar to thighs", target: "3 sets × 12-15 reps", sets: [{ weight: "12.5", reps: "15" }, { weight: "15", reps: "12" }, { weight: "15", reps: "12" }] },
-          { name: "DB Lateral Raises", formCue: "Lead with elbows, pour the tea motion", target: "3-4 sets × 12-15 reps", sets: [{ weight: "4", reps: "15" }, { weight: "5", reps: "12" }, { weight: "5", reps: "12" }] },
-          { name: "Hammer Curls", formCue: "Thumbs up grip, builds forearms & biceps", target: "3 sets × 10-12 reps", sets: [{ weight: "6", reps: "12" }, { weight: "7.5", reps: "10" }, { weight: "7.5", reps: "10" }] }
+          { name: "Lat Pulldown / Single-Arm Row", formCue: "Full overhead stretch, drive elbow to rib", target: "3-4 sets × 8-12 reps", sets: [{ weight: "25", reps: "12" }, { weight: "30", reps: "10" }] },
+          { name: "Flat DB Bench Press / DB Flyes", formCue: "Soft elbows on flyes, deep chest stretch", target: "3 sets × 10-12 reps", sets: [{ weight: "8", reps: "12" }, { weight: "10", reps: "10" }] },
+          { name: "DB Lateral Raises", formCue: "Lead with elbows, pour the tea motion", target: "3-4 sets × 12-15 reps", sets: [{ weight: "4", reps: "15" }, { weight: "5", reps: "12" }] }
         ]
       },
       day5: {
         title: "Day 5: Lower 2 (Posterior Chain & Hamstrings)",
         focus: "Hamstrings, Glutes & Lower Back",
         exercises: [
-          { name: "DB / Barbell Romanian Deadlifts (RDLs)", formCue: "Push hips back, 2-3s eccentric, flat back", target: "4 sets × 8-10 reps", sets: [{ weight: "12", reps: "10" }, { weight: "14", reps: "10" }, { weight: "16", reps: "8" }, { weight: "16", reps: "8" }] },
-          { name: "Leg Press / Hack Squat", formCue: "Feet high on pad for glute bias", target: "3 sets × 10-12 reps", sets: [{ weight: "40", reps: "12" }, { weight: "50", reps: "10" }, { weight: "50", reps: "10" }] },
-          { name: "Cable Kickbacks or Hip Abductions", formCue: "Squeeze glute medius at peak outer movement", target: "3 sets × 12-15 reps", sets: [{ weight: "5", reps: "15" }, { weight: "7.5", reps: "12" }, { weight: "7.5", reps: "12" }] },
-          { name: "Standing or Seated Leg Curls", formCue: "Full stretch, pause 1 second at bend", target: "3 sets × 10-12 reps", sets: [{ weight: "20", reps: "12" }, { weight: "25", reps: "10" }, { weight: "25", reps: "10" }] },
-          { name: "Deadbugs / Hanging Leg Raises", formCue: "Exhale through effort, keep abs locked", target: "3 sets × 12-15 reps", sets: [{ weight: "BW", reps: "12" }, { weight: "BW", reps: "12" }] }
+          { name: "DB / Barbell RDLs", formCue: "Push hips back, 2-3s eccentric, flat back", target: "4 sets × 8-10 reps", sets: [{ weight: "12", reps: "10" }, { weight: "14", reps: "10" }] },
+          { name: "Leg Press / Hack Squat", formCue: "Feet high on pad for glute bias", target: "3 sets × 10-12 reps", sets: [{ weight: "40", reps: "12" }, { weight: "50", reps: "10" }] }
         ]
       }
     };
 
-    // Standard Mon-Fri Recommended Nutrition Plan
-    const defaultMealPlan = [
-      { id: 1, name: "Overnight Oats (30g oats, 100ml HL milk, chia, berries)", cals: 300, protein: 12, category: "Breakfast" },
-      { id: 2, name: "2-in-1 No-Sugar Coffee", cals: 60, protein: 0, category: "Morning" },
-      { id: 3, name: "Fresh Fruit (1 Apple or 1 Orange)", cals: 70, protein: 0, category: "Snack" },
-      { id: 4, name: "Lunch: 2 Chapatis + Tofu/Egg Bhurji + Veggies & Spinach", cals: 400, protein: 25, category: "Lunch" },
-      { id: 5, name: "Pre-Workout: 1 Slice Wholemeal Bread + 10g Peanut Butter", cals: 150, protein: 5, category: "Pre-Workout" },
-      { id: 6, name: "Post-Workout: 1 Scoop Whey Protein Shake", cals: 120, protein: 25, category: "Post-Workout" },
-      { id: 7, name: "Late Afternoon: 1 Tub Chobani Greek Yogurt", cals: 90, protein: 15, category: "Snack" },
-      { id: 8, name: "Dinner: 1 Paratha + Chicken Breast / Dabba Portion", cals: 420, protein: 28, category: "Dinner" },
-      { id: 9, name: "Post-Dinner: 125g Marigold HL Yogurt + Frozen Berries", cals: 100, protein: 9, category: "Night Snack" }
-    ];
-
     function App() {
-      const [activeTab, setActiveTab] = useState('workout');
+      const [activeTab, setActiveTab] = useState('nutrition');
       const [selectedWeek, setSelectedWeek] = useState('Week 2');
       const [selectedDay, setSelectedDay] = useState('day1');
-      
+
       // Gym Counter State
       const [gymDays, setGymDays] = useState(() => {
         const saved = localStorage.getItem('fitpulse_gym_days');
@@ -118,7 +119,7 @@
         return saved ? JSON.parse(saved) : initialWorkoutData;
       });
 
-      // Date-based Food Logging
+      // Date-based Daily Food Logs
       const [selectedDate, setSelectedDate] = useState(getTodayStr());
       const [dailyLogs, setDailyLogs] = useState(() => {
         const saved = localStorage.getItem('fitpulse_daily_food_logs');
@@ -126,17 +127,31 @@
         return { [getTodayStr()]: defaultMealPlan };
       });
 
-      // Date-based Dynamic Steps Log { "YYYY-MM-DD": [ { id, count, time } ] }
+      // Upcoming Week Regular Meal Plan State
+      const [weeklyPlan, setWeeklyPlan] = useState(() => {
+        const saved = localStorage.getItem('fitpulse_weekly_regular_plan');
+        if (saved) return JSON.parse(saved);
+        const plan = {};
+        DAYS_OF_WEEK.forEach(day => {
+          plan[day] = defaultMealPlan;
+        });
+        return plan;
+      });
+
+      const [selectedPlannerDay, setSelectedPlannerDay] = useState("Monday");
+
+      // Steps Tracker
       const [stepLogs, setStepLogs] = useState(() => {
         const saved = localStorage.getItem('fitpulse_daily_step_logs');
         if (saved) return JSON.parse(saved);
         return { [getTodayStr()]: [{ id: 1, count: 8500, time: "Initial" }] };
       });
 
-      const [customMeal, setCustomMeal] = useState({ name: '', cals: '', protein: '', category: 'Lunch' });
+      // Input states for meal-by-meal adding
+      const [mealInputs, setMealInputs] = useState({});
+      const [plannerInputs, setPlannerInputs] = useState({});
       const [stepInput, setStepInput] = useState('');
 
-      // LocalStorage Persistence
       useEffect(() => {
         localStorage.setItem('fitpulse_gym_days', gymDays);
       }, [gymDays]);
@@ -150,10 +165,109 @@
       }, [dailyLogs]);
 
       useEffect(() => {
+        localStorage.setItem('fitpulse_weekly_regular_plan', JSON.stringify(weeklyPlan));
+      }, [weeklyPlan]);
+
+      useEffect(() => {
         localStorage.setItem('fitpulse_daily_step_logs', JSON.stringify(stepLogs));
       }, [stepLogs]);
 
-      // Workout Log Handlers
+      // Calculations for Selected Date Log
+      const currentMeals = dailyLogs[selectedDate] || [];
+      const currentStepSessions = stepLogs[selectedDate] || [];
+
+      const totalCals = currentMeals.reduce((acc, curr) => acc + Number(curr.cals || 0), 0);
+      const totalProtein = currentMeals.reduce((acc, curr) => acc + Number(curr.protein || 0), 0);
+      const totalSteps = currentStepSessions.reduce((acc, curr) => acc + Number(curr.count || 0), 0);
+
+      const calTarget = 1600;
+      const calDiff = totalCals - calTarget;
+
+      // Add Food to specific Meal Slot on Selected Date
+      const handleAddMealItem = (slot) => {
+        const input = mealInputs[slot] || {};
+        if (!input.name) return;
+
+        const newItem = {
+          id: Date.now(),
+          name: input.name,
+          cals: Number(input.cals) || 0,
+          protein: Number(input.protein) || 0,
+          slot: slot
+        };
+
+        const updated = [...currentMeals, newItem];
+        setDailyLogs({ ...dailyLogs, [selectedDate]: updated });
+
+        // Reset input for this slot
+        setMealInputs({ ...mealInputs, [slot]: { name: '', cals: '', protein: '' } });
+      };
+
+      const removeMealItem = (id) => {
+        const updated = currentMeals.filter(item => item.id !== id);
+        setDailyLogs({ ...dailyLogs, [selectedDate]: updated });
+      };
+
+      const loadStandardPlanForDate = () => {
+        setDailyLogs({ ...dailyLogs, [selectedDate]: [...defaultMealPlan] });
+      };
+
+      const loadWeeklyPlannerDayIntoDate = () => {
+        const dayOfWeek = new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' });
+        const plannedForDay = weeklyPlan[dayOfWeek] || defaultMealPlan;
+        setDailyLogs({ ...dailyLogs, [selectedDate]: [...plannedForDay] });
+      };
+
+      const clearSelectedDateLog = () => {
+        setDailyLogs({ ...dailyLogs, [selectedDate]: [] });
+      };
+
+      // Add Food to Upcoming Week Planner Day
+      const handleAddPlannerItem = (slot) => {
+        const input = plannerInputs[slot] || {};
+        if (!input.name) return;
+
+        const newItem = {
+          id: Date.now(),
+          name: input.name,
+          cals: Number(input.cals) || 0,
+          protein: Number(input.protein) || 0,
+          slot: slot
+        };
+
+        const currentDayPlan = weeklyPlan[selectedPlannerDay] || [];
+        const updated = [...currentDayPlan, newItem];
+        setWeeklyPlan({ ...weeklyPlan, [selectedPlannerDay]: updated });
+
+        setPlannerInputs({ ...plannerInputs, [slot]: { name: '', cals: '', protein: '' } });
+      };
+
+      const removePlannerItem = (id) => {
+        const currentDayPlan = weeklyPlan[selectedPlannerDay] || [];
+        const updated = currentDayPlan.filter(item => item.id !== id);
+        setWeeklyPlan({ ...weeklyPlan, [selectedPlannerDay]: updated });
+      };
+
+      // Steps Logic
+      const handleAddSteps = (e) => {
+        e.preventDefault();
+        const countVal = parseInt(stepInput, 10);
+        if (!countVal || countVal <= 0) return;
+
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const newStepEntry = { id: Date.now(), count: countVal, time: timeStr };
+
+        const updated = [...currentStepSessions, newStepEntry];
+        setStepLogs({ ...stepLogs, [selectedDate]: updated });
+        setStepInput('');
+      };
+
+      const removeStepSession = (id) => {
+        const updated = currentStepSessions.filter(s => s.id !== id);
+        setStepLogs({ ...stepLogs, [selectedDate]: updated });
+      };
+
+      // Workout Handlers
       const handleSetChange = (dayKey, exIndex, setIndex, field, value) => {
         const updated = { ...workoutLogs };
         updated[dayKey].exercises[exIndex].sets[setIndex][field] = value;
@@ -174,155 +288,64 @@
         setWorkoutLogs(updated);
       };
 
-      // Active Date Logs
-      const currentMeals = dailyLogs[selectedDate] || [];
-      const currentStepSessions = stepLogs[selectedDate] || [];
-
-      // Calculations for Selected Date
-      const totalCals = currentMeals.reduce((acc, curr) => acc + Number(curr.cals || 0), 0);
-      const totalProtein = currentMeals.reduce((acc, curr) => acc + Number(curr.protein || 0), 0);
-      const totalSteps = currentStepSessions.reduce((acc, curr) => acc + Number(curr.count || 0), 0);
-
-      const calTarget = 1600;
-      const calDiff = totalCals - calTarget;
-
-      // Food Logging Functions
-      const addFoodItem = (e) => {
-        e.preventDefault();
-        if (!customMeal.name) return;
-        const newItem = {
-          id: Date.now(),
-          name: customMeal.name,
-          cals: Number(customMeal.cals) || 0,
-          protein: Number(customMeal.protein) || 0,
-          category: customMeal.category || "General"
-        };
-        const updatedDateLog = [...currentMeals, newItem];
-        setDailyLogs({ ...dailyLogs, [selectedDate]: updatedDateLog });
-        setCustomMeal({ name: '', cals: '', protein: '', category: 'Lunch' });
-      };
-
-      const removeFoodItem = (id) => {
-        const updatedDateLog = currentMeals.filter(item => item.id !== id);
-        setDailyLogs({ ...dailyLogs, [selectedDate]: updatedDateLog });
-      };
-
-      const loadStandardPlan = () => {
-        setDailyLogs({ ...dailyLogs, [selectedDate]: [...defaultMealPlan] });
-      };
-
-      const clearSelectedDateLog = () => {
-        setDailyLogs({ ...dailyLogs, [selectedDate]: [] });
-      };
-
-      // Step Logging Functions
-      const handleAddSteps = (e) => {
-        e.preventDefault();
-        const countVal = parseInt(stepInput, 10);
-        if (!countVal || countVal <= 0) return;
-
-        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const newStepEntry = {
-          id: Date.now(),
-          count: countVal,
-          time: timeStr
-        };
-
-        const updatedStepList = [...currentStepSessions, newStepEntry];
-        setStepLogs({ ...stepLogs, [selectedDate]: updatedStepList });
-        setStepInput('');
-      };
-
-      const removeStepSession = (id) => {
-        const updatedStepList = currentStepSessions.filter(s => s.id !== id);
-        setStepLogs({ ...stepLogs, [selectedDate]: updatedStepList });
-      };
-
-      const exportToCSV = () => {
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Week,Day,Exercise,Set,Weight (kg),Reps\n";
-
-        Object.keys(workoutLogs).forEach(dayKey => {
-          const day = workoutLogs[dayKey];
-          day.exercises.forEach(ex => {
-            ex.sets.forEach((set, sIdx) => {
-              csvContent += `"${selectedWeek}","${day.title}","${ex.name}",${sIdx + 1},"${set.weight}","${set.reps}"\n`;
-            });
-          });
-        });
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `Workout_Log_${selectedWeek}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      };
-
       return (
         <div className="max-w-4xl mx-auto p-3 sm:p-6 pb-20">
           
-          {/* Header Bar */}
+          {/* Main Top Dashboard Header */}
           <header className="bg-slate-800 border border-slate-700 rounded-2xl p-4 sm:p-6 mb-6 shadow-xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <span className="text-xs uppercase tracking-widest text-emerald-400 font-bold">1-Month Calorie Deficit & Gym Split</span>
+                <span className="text-xs uppercase tracking-widest text-emerald-400 font-bold">FitPulse 100 Calorie Deficit & Gym Split</span>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2">
-                  <span>⚡</span> FitPulse 100 Tracker
+                  <span>⚡</span> FitPulse Tracker
                 </h1>
               </div>
 
-              {/* 100 Day Milestone Counter Widget */}
               <div className="bg-slate-900 border border-emerald-500/30 rounded-xl p-3 flex items-center gap-4 w-full sm:w-auto justify-between">
                 <div>
                   <div className="text-xs text-slate-400 font-medium">100-Day Gym Goal</div>
                   <div className="text-xl font-bold text-emerald-400">
                     Day {gymDays} <span className="text-xs text-slate-400 font-normal">/ 100</span>
                   </div>
-                  <div className="text-[10px] text-emerald-300">{100 - gymDays} days remaining!</div>
                 </div>
                 <button 
                   onClick={() => setGymDays(prev => prev + 1)}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition active:scale-95 shadow-md flex items-center gap-1"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition"
                 >
-                  <span>+1</span> Log Gym
+                  +1 Log Gym
                 </button>
               </div>
             </div>
 
-            {/* Quick Macro & Step Summary Dashboard for Selected Date */}
+            {/* Quick Macro Bar */}
             <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-5 pt-4 border-t border-slate-700/60">
               <div className="bg-slate-900/60 p-2.5 sm:p-3 rounded-lg border border-slate-700">
-                <div className="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Calories ({selectedDate === getTodayStr() ? 'Today' : selectedDate})</div>
+                <div className="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Calories ({selectedDate})</div>
                 <div className={`text-base sm:text-xl font-bold ${calDiff > 0 ? 'text-rose-400' : 'text-amber-400'}`}>
                   {totalCals} <span className="text-[10px] font-normal text-slate-400">/ 1600 kcal</span>
-                </div>
-                <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                  <div className={`h-full transition-all duration-300 ${calDiff > 0 ? 'bg-rose-500' : 'bg-amber-400'}`} style={{ width: `${Math.min((totalCals / 1600) * 100, 100)}%` }}></div>
                 </div>
               </div>
 
               <div className="bg-slate-900/60 p-2.5 sm:p-3 rounded-lg border border-slate-700">
                 <div className="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Protein</div>
                 <div className="text-base sm:text-xl font-bold text-emerald-400">{totalProtein}g <span className="text-[10px] font-normal text-slate-400">/ 115g</span></div>
-                <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                  <div className="bg-emerald-400 h-full transition-all duration-300" style={{ width: `${Math.min((totalProtein / 115) * 100, 100)}%` }}></div>
-                </div>
               </div>
 
               <div className="bg-slate-900/60 p-2.5 sm:p-3 rounded-lg border border-slate-700">
-                <div className="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Daily Steps</div>
+                <div className="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Steps</div>
                 <div className="text-base sm:text-xl font-bold text-sky-400">{totalSteps.toLocaleString()} <span className="text-[10px] font-normal text-slate-400">/ 10k</span></div>
-                <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                  <div className="bg-sky-400 h-full transition-all duration-300" style={{ width: `${Math.min((totalSteps / 10000) * 100, 100)}%` }}></div>
-                </div>
               </div>
             </div>
           </header>
 
-          {/* Tab Navigation */}
+          {/* Navigation Tabs */}
           <div className="flex bg-slate-800/80 p-1 rounded-xl mb-6 border border-slate-700">
+            <button
+              onClick={() => setActiveTab('nutrition')}
+              className={`flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition ${activeTab === 'nutrition' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+            >
+              🥗 Daily & Weekly Nutrition
+            </button>
             <button
               onClick={() => setActiveTab('workout')}
               className={`flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition ${activeTab === 'workout' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
@@ -330,164 +353,32 @@
               🏋️ Workout Split
             </button>
             <button
-              onClick={() => setActiveTab('nutrition')}
-              className={`flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition ${activeTab === 'nutrition' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
-            >
-              🥗 Daily Food & Steps
-            </button>
-            <button
               onClick={() => setActiveTab('progress')}
               className={`flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition ${activeTab === 'progress' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
             >
-              📊 100-Day Goal
+              📊 Goal Progress
             </button>
           </div>
 
-          {/* TAB 1: WORKOUT SPLIT (PRESERVED) */}
-          {activeTab === 'workout' && (
-            <div className="space-y-6">
-              
-              {/* Controls Bar: Week Switcher & CSV Export */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-800/50 p-4 rounded-xl border border-slate-700/60">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400 font-medium">Select Week:</span>
-                  {['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'].map(wk => (
-                    <button
-                      key={wk}
-                      onClick={() => setSelectedWeek(wk)}
-                      className={`px-3 py-1 text-xs font-semibold rounded-md transition ${selectedWeek === wk ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
-                    >
-                      {wk}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  onClick={exportToCSV}
-                  className="w-full sm:w-auto bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-600 flex items-center justify-center gap-1.5 transition"
-                >
-                  📥 Export to Excel (.csv)
-                </button>
-              </div>
-
-              {/* Day Selection Tabs */}
-              <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
-                {[
-                  { key: 'day1', label: 'Day 1', sub: 'Upper 1' },
-                  { key: 'day2', label: 'Day 2', sub: 'Lower 1' },
-                  { key: 'day3', label: 'Day 3', sub: 'Core/Cardio' },
-                  { key: 'day4', label: 'Day 4', sub: 'Upper 2' },
-                  { key: 'day5', label: 'Day 5', sub: 'Lower 2' },
-                ].map(d => (
-                  <button
-                    key={d.key}
-                    onClick={() => setSelectedDay(d.key)}
-                    className={`p-2 sm:p-3 rounded-xl border text-center transition ${selectedDay === d.key ? 'bg-slate-800 border-emerald-500 text-white shadow-lg' : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'}`}
-                  >
-                    <div className="text-xs sm:text-sm font-bold">{d.label}</div>
-                    <div className="text-[10px] opacity-75 truncate">{d.sub}</div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Selected Day Workout Card */}
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 sm:p-6 space-y-6">
-                <div>
-                  <div className="text-xs uppercase font-bold text-emerald-400 tracking-wider">{selectedWeek} • {workoutLogs[selectedDay].focus}</div>
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-white">{workoutLogs[selectedDay].title}</h2>
-                </div>
-
-                {/* Exercise List */}
-                <div className="space-y-6">
-                  {workoutLogs[selectedDay].exercises.map((ex, exIdx) => (
-                    <div key={exIdx} className="bg-slate-900/80 border border-slate-700/80 rounded-xl p-4 space-y-3">
-                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1">
-                        <div>
-                          <h3 className="font-bold text-slate-100 text-sm sm:text-base">{exIdx + 1}. {ex.name}</h3>
-                          <div className="text-xs text-emerald-300 font-medium flex items-center gap-1">
-                            <span>💡 Cues:</span> {ex.formCue}
-                          </div>
-                        </div>
-                        <span className="text-xs font-medium text-slate-400 bg-slate-800 px-2.5 py-1 rounded-md self-start sm:self-center border border-slate-700">
-                          Target: {ex.target}
-                        </span>
-                      </div>
-
-                      {/* Sets Table */}
-                      <div className="space-y-2 pt-2">
-                        <div className="grid grid-cols-12 gap-2 text-[10px] font-bold text-slate-400 uppercase px-1">
-                          <span className="col-span-2">Set</span>
-                          <span className="col-span-4">Weight (kg)</span>
-                          <span className="col-span-4">Reps</span>
-                          <span className="col-span-2 text-right">Action</span>
-                        </div>
-
-                        {ex.sets.map((set, sIdx) => (
-                          <div key={sIdx} className="grid grid-cols-12 gap-2 items-center bg-slate-800/60 p-1.5 rounded-lg border border-slate-700/50">
-                            <span className="col-span-2 text-xs font-bold text-slate-300 px-1">Set {sIdx + 1}</span>
-                            <div className="col-span-4">
-                              <input
-                                type="text"
-                                value={set.weight}
-                                onChange={(e) => handleSetChange(selectedDay, exIdx, sIdx, 'weight', e.target.value)}
-                                placeholder="kg"
-                                className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:border-emerald-500 outline-none"
-                              />
-                            </div>
-                            <div className="col-span-4">
-                              <input
-                                type="text"
-                                value={set.reps}
-                                onChange={(e) => handleSetChange(selectedDay, exIdx, sIdx, 'reps', e.target.value)}
-                                placeholder="reps"
-                                className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:border-emerald-500 outline-none"
-                              />
-                            </div>
-                            <div className="col-span-2 text-right">
-                              <button
-                                onClick={() => removeSet(selectedDay, exIdx, sIdx)}
-                                className="text-slate-500 hover:text-rose-400 text-xs px-1"
-                                title="Remove Set"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-
-                        <button
-                          onClick={() => addSet(selectedDay, exIdx)}
-                          className="mt-2 text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 px-1 py-0.5"
-                        >
-                          + Add Set
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: NUTRITION & REAL-TIME STEP LOGGING */}
+          {/* TAB: NUTRITION (MEAL-BY-MEAL LOGGING + UPCOMING WEEK PLANNER) */}
           {activeTab === 'nutrition' && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               
-              {/* Date Selection & Deviation Status Header */}
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 sm:p-5 space-y-4">
+              {/* SECTION 1: DAILY MEAL-BY-MEAL LOG */}
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 sm:p-6 space-y-5">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <div>
                     <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                      📅 Daily Food & Activity Log
+                      🍽️ Meal-by-Meal Daily Log
                     </h2>
-                    <p className="text-xs text-slate-400">Log meals and step sessions continuously throughout your day.</p>
+                    <p className="text-xs text-slate-400">Log meals slot-by-slot for specific dates or deviations.</p>
                   </div>
 
-                  {/* Date Selector Controls */}
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                  {/* Date Control */}
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSelectedDate(getTodayStr())}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition ${selectedDate === getTodayStr() ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'}`}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition ${selectedDate === getTodayStr() ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-700 text-slate-300 border-slate-600'}`}
                     >
                       Today
                     </button>
@@ -495,265 +386,334 @@
                       type="date"
                       value={selectedDate}
                       onChange={(e) => setSelectedDate(e.target.value)}
-                      className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-emerald-400 font-bold outline-none focus:border-emerald-500"
+                      className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-emerald-400 font-bold outline-none"
                     />
                   </div>
                 </div>
 
-                {/* Calorie Status Banner */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 rounded-xl border bg-slate-900/80 border-slate-700 gap-2">
-                  <div className="flex items-center gap-2">
+                {/* Status & Quick Action Buttons */}
+                <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-900/80 rounded-xl border border-slate-700">
+                  <div className="text-xs font-semibold">
                     {calDiff > 0 ? (
-                      <span className="text-xs font-bold text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/30">
-                        ⚠️ Over Budget by +{calDiff} kcal
-                      </span>
+                      <span className="text-rose-400">⚠️ +{calDiff} kcal over 1600 budget</span>
                     ) : (
-                      <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/30">
-                        ✅ On Track ({Math.abs(calDiff)} kcal remaining)
-                      </span>
+                      <span className="text-emerald-400">✅ {Math.abs(calDiff)} kcal remaining</span>
                     )}
-                    <span className="text-xs text-slate-400 font-medium">
-                      Total: <strong className="text-white">{totalCals} kcal</strong> | Protein: <strong className="text-emerald-400">{totalProtein}g</strong>
-                    </span>
                   </div>
 
-                  {/* Template Quick Actions */}
-                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <div className="flex items-center gap-2">
                     <button
-                      onClick={loadStandardPlan}
-                      className="text-[11px] bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 px-3 py-1 rounded-lg border border-emerald-500/30 font-semibold transition"
-                      title="Reset or fill this day with your standard Mon-Fri meal plan"
+                      onClick={loadWeeklyPlannerDayIntoDate}
+                      className="text-[11px] bg-slate-700 hover:bg-slate-600 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-600 transition"
+                      title="Load pre-planned schedule for this day of week"
+                    >
+                      📅 Load Weekly Plan
+                    </button>
+                    <button
+                      onClick={loadStandardPlanForDate}
+                      className="text-[11px] bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 px-2.5 py-1 rounded-lg border border-emerald-500/30 font-semibold transition"
                     >
                       📋 Load Standard Plan
                     </button>
                     <button
                       onClick={clearSelectedDateLog}
-                      className="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 transition"
+                      className="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded-lg border border-slate-700 transition"
                     >
-                      🗑 Clear Meals
+                      🗑 Clear
                     </button>
                   </div>
                 </div>
 
-                {/* Logged Food Items List */}
-                <div className="space-y-2 pt-2">
-                  <div className="text-xs font-bold text-slate-300 flex justify-between items-center px-1">
-                    <span>Logged Meals for {selectedDate} ({currentMeals.length} items)</span>
-                  </div>
+                {/* Meal Slots List */}
+                <div className="space-y-4">
+                  {MEAL_SLOTS.map(slot => {
+                    const slotMeals = currentMeals.filter(m => m.slot === slot);
+                    const slotInput = mealInputs[slot] || { name: '', cals: '', protein: '' };
 
-                  {currentMeals.length === 0 ? (
-                    <div className="text-center py-8 bg-slate-900/40 rounded-xl border border-dashed border-slate-700 space-y-2">
-                      <div className="text-2xl">🥣</div>
-                      <div className="text-xs text-slate-400 font-medium">No meals logged for this date yet.</div>
-                      <button
-                        onClick={loadStandardPlan}
-                        className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg transition"
-                      >
-                        Load Standard 1500 kcal Diet Plan
-                      </button>
-                    </div>
-                  ) : (
-                    currentMeals.map(item => (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between p-3 bg-slate-900/90 rounded-xl border border-slate-700/80 hover:border-slate-600 transition"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded-md font-bold border border-slate-700 min-w-[70px] text-center">
-                            {item.category || "Meal"}
+                    return (
+                      <div key={slot} className="bg-slate-900/70 border border-slate-700/80 rounded-xl p-3.5 space-y-2.5">
+                        <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">{slot}</span>
+                          <span className="text-[11px] text-slate-400">
+                            {slotMeals.reduce((a, c) => a + Number(c.cals || 0), 0)} kcal | {slotMeals.reduce((a, c) => a + Number(c.protein || 0), 0)}g protein
                           </span>
-                          <div>
-                            <div className="text-xs sm:text-sm font-semibold text-slate-100">
-                              {item.name}
-                            </div>
-                          </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <div className="text-xs sm:text-sm font-bold text-amber-400">{item.cals} kcal</div>
-                            <div className="text-[10px] sm:text-xs text-emerald-400 font-semibold">{item.protein}g protein</div>
+                        {/* List items in this slot */}
+                        {slotMeals.length > 0 && (
+                          <div className="space-y-1.5">
+                            {slotMeals.map(item => (
+                              <div key={item.id} className="flex justify-between items-center bg-slate-800/80 px-3 py-2 rounded-lg border border-slate-700/50">
+                                <span className="text-xs font-medium text-slate-200">{item.name}</span>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-xs font-bold text-amber-400">{item.cals} kcal</span>
+                                  <span className="text-xs font-bold text-emerald-400">{item.protein}g P</span>
+                                  <button onClick={() => removeMealItem(item.id)} className="text-slate-500 hover:text-rose-400 text-xs">✕</button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
+                        )}
+
+                        {/* Direct Slot Input Form */}
+                        <div className="grid grid-cols-12 gap-2 pt-1">
+                          <input
+                            type="text"
+                            placeholder={`Add item to ${slot}...`}
+                            value={slotInput.name || ''}
+                            onChange={(e) => setMealInputs({
+                              ...mealInputs,
+                              [slot]: { ...slotInput, name: e.target.value }
+                            })}
+                            className="col-span-6 bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-xs text-white outline-none focus:border-emerald-500"
+                          />
+                          <input
+                            type="number"
+                            placeholder="kcal"
+                            value={slotInput.cals || ''}
+                            onChange={(e) => setMealInputs({
+                              ...mealInputs,
+                              [slot]: { ...slotInput, cals: e.target.value }
+                            })}
+                            className="col-span-2 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-white outline-none focus:border-emerald-500"
+                          />
+                          <input
+                            type="number"
+                            placeholder="g protein"
+                            value={slotInput.protein || ''}
+                            onChange={(e) => setMealInputs({
+                              ...mealInputs,
+                              [slot]: { ...slotInput, protein: e.target.value }
+                            })}
+                            className="col-span-2 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-white outline-none focus:border-emerald-500"
+                          />
                           <button
-                            onClick={() => removeFoodItem(item.id)}
-                            className="text-slate-500 hover:text-rose-400 text-sm font-bold px-1 transition"
-                            title="Delete Food Item"
+                            onClick={() => handleAddMealItem(slot)}
+                            className="col-span-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded py-1 transition"
                           >
-                            ✕
+                            + Add
                           </button>
                         </div>
                       </div>
-                    ))
-                  )}
+                    );
+                  })}
                 </div>
-
-                {/* Add Custom Food / Deviation Form */}
-                <form onSubmit={addFoodItem} className="pt-4 border-t border-slate-700/60 space-y-3">
-                  <div className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-                    <span>➕ Log Food Item (Add-as-you-go)</span>
-                  </div>
-
-                  <div className="grid grid-cols-12 gap-2">
-                    <input
-                      type="text"
-                      placeholder="Food item name (e.g. McSpicy, Chicken Rice, Latte)"
-                      value={customMeal.name}
-                      onChange={(e) => setCustomMeal({ ...customMeal, name: e.target.value })}
-                      className="col-span-12 sm:col-span-5 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
-                    />
-
-                    <select
-                      value={customMeal.category}
-                      onChange={(e) => setCustomMeal({ ...customMeal, category: e.target.value })}
-                      className="col-span-6 sm:col-span-3 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-emerald-500 font-medium"
-                    >
-                      <option value="Breakfast">Breakfast</option>
-                      <option value="Lunch">Lunch</option>
-                      <option value="Dinner">Dinner</option>
-                      <option value="Snack">Snack</option>
-                      <option value="Pre-Workout">Pre-Workout</option>
-                      <option value="Post-Workout">Post-Workout</option>
-                    </select>
-
-                    <input
-                      type="number"
-                      placeholder="Calories"
-                      value={customMeal.cals}
-                      onChange={(e) => setCustomMeal({ ...customMeal, cals: e.target.value })}
-                      className="col-span-3 sm:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
-                    />
-
-                    <input
-                      type="number"
-                      placeholder="Protein (g)"
-                      value={customMeal.protein}
-                      onChange={(e) => setCustomMeal({ ...customMeal, protein: e.target.value })}
-                      className="col-span-3 sm:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 rounded-lg transition shadow"
-                  >
-                    + Add Item to {selectedDate} Log
-                  </button>
-                </form>
               </div>
 
-              {/* Dynamic Multi-Session Step Tracker Log */}
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 sm:p-6 space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-bold text-white text-base flex items-center gap-2">
-                      👟 Step Count Logger ({selectedDate})
-                    </h3>
-                    <p className="text-xs text-slate-400">Add walks or active steps incrementally throughout the day.</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-extrabold text-sky-400">{totalSteps.toLocaleString()}</div>
-                    <div className="text-[10px] text-slate-400">/ 10,000 steps</div>
-                  </div>
+              {/* SECTION 2: UPCOMING WEEK REGULAR MEAL PLANNER */}
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 sm:p-6 space-y-5">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                    📅 Upcoming Week Regular Plan
+                  </h2>
+                  <p className="text-xs text-slate-400">Pre-plan your upcoming week meal-by-meal as a standard template.</p>
                 </div>
 
-                {/* Log Steps Form */}
+                {/* Day Selector */}
+                <div className="flex flex-wrap gap-1.5">
+                  {DAYS_OF_WEEK.map(day => (
+                    <button
+                      key={day}
+                      onClick={() => setSelectedPlannerDay(day)}
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition ${selectedPlannerDay === day ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-white'}`}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Planned Meals Display for Selected Day */}
+                <div className="bg-slate-900/90 border border-slate-700 rounded-xl p-4 space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 className="text-sm font-bold text-emerald-400">{selectedPlannerDay} Regular Schedule</h3>
+                    <div className="text-xs text-slate-300 font-semibold">
+                      Planned Totals: {(weeklyPlan[selectedPlannerDay] || []).reduce((a,c) => a + Number(c.cals||0), 0)} kcal | {(weeklyPlan[selectedPlannerDay] || []).reduce((a,c) => a + Number(c.protein||0), 0)}g Protein
+                    </div>
+                  </div>
+
+                  {MEAL_SLOTS.map(slot => {
+                    const plannerDayMeals = (weeklyPlan[selectedPlannerDay] || []).filter(m => m.slot === slot);
+                    const slotInput = plannerInputs[slot] || { name: '', cals: '', protein: '' };
+
+                    return (
+                      <div key={slot} className="bg-slate-800/50 border border-slate-700/60 rounded-lg p-3 space-y-2">
+                        <div className="text-[11px] font-bold text-slate-300 uppercase">{slot}</div>
+                        
+                        {plannerDayMeals.map(item => (
+                          <div key={item.id} className="flex justify-between items-center bg-slate-900 px-2.5 py-1.5 rounded border border-slate-700 text-xs">
+                            <span className="text-slate-200">{item.name}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-amber-400 font-bold">{item.cals} kcal</span>
+                              <span className="text-emerald-400 font-bold">{item.protein}g P</span>
+                              <button onClick={() => removePlannerItem(item.id)} className="text-slate-500 hover:text-rose-400">✕</button>
+                            </div>
+                          </div>
+                        ))}
+
+                        <div className="grid grid-cols-12 gap-2 pt-1">
+                          <input
+                            type="text"
+                            placeholder={`Plan item for ${slot}...`}
+                            value={slotInput.name || ''}
+                            onChange={(e) => setPlannerInputs({
+                              ...plannerInputs,
+                              [slot]: { ...slotInput, name: e.target.value }
+                            })}
+                            className="col-span-6 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white outline-none focus:border-emerald-500"
+                          />
+                          <input
+                            type="number"
+                            placeholder="kcal"
+                            value={slotInput.cals || ''}
+                            onChange={(e) => setPlannerInputs({
+                              ...plannerInputs,
+                              [slot]: { ...slotInput, cals: e.target.value }
+                            })}
+                            className="col-span-2 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white outline-none focus:border-emerald-500"
+                          />
+                          <input
+                            type="number"
+                            placeholder="g protein"
+                            value={slotInput.protein || ''}
+                            onChange={(e) => setPlannerInputs({
+                              ...plannerInputs,
+                              [slot]: { ...slotInput, protein: e.target.value }
+                            })}
+                            className="col-span-2 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white outline-none focus:border-emerald-500"
+                          />
+                          <button
+                            onClick={() => handleAddPlannerItem(slot)}
+                            className="col-span-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold rounded py-1 transition"
+                          >
+                            + Plan
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* STEP TRACKER */}
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 sm:p-6 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-white text-base">👟 Step Counter ({selectedDate})</h3>
+                  <div className="text-xs font-bold text-sky-400">{totalSteps.toLocaleString()} / 10,000 steps</div>
+                </div>
+
                 <form onSubmit={handleAddSteps} className="flex gap-2">
                   <input
                     type="number"
-                    placeholder="Enter steps (e.g. 2500)"
+                    placeholder="Enter step count..."
                     value={stepInput}
                     onChange={(e) => setStepInput(e.target.value)}
-                    className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-sky-500 outline-none flex-1"
+                    className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white outline-none flex-1 focus:border-sky-500"
                   />
-                  <button
-                    type="submit"
-                    className="bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs px-4 py-2 rounded-lg transition shadow"
-                  >
-                    + Add Walk
+                  <button type="submit" className="bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs px-4 py-2 rounded-lg transition">
+                    + Log Walk
                   </button>
                 </form>
 
-                {/* Cumulative Step Entries Display */}
-                <div className="space-y-2 pt-2">
-                  <div className="text-xs font-bold text-slate-400">Today's Step Sessions</div>
-                  {currentStepSessions.length === 0 ? (
-                    <div className="text-xs text-slate-500 italic bg-slate-900/40 p-3 rounded-lg border border-slate-800">
-                      No walks or steps logged for {selectedDate} yet.
+                <div className="flex flex-wrap gap-2">
+                  {currentStepSessions.map(s => (
+                    <div key={s.id} className="bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700 text-xs flex items-center gap-2">
+                      <span className="text-sky-300 font-bold">+{s.count.toLocaleString()}</span>
+                      <span className="text-slate-500">({s.time})</span>
+                      <button onClick={() => removeStepSession(s.id)} className="text-slate-500 hover:text-rose-400">✕</button>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {currentStepSessions.map(session => (
-                        <div key={session.id} className="flex justify-between items-center bg-slate-900 p-2.5 rounded-lg border border-slate-700">
-                          <div>
-                            <span className="text-xs font-bold text-sky-300">+{session.count.toLocaleString()} steps</span>
-                            <span className="text-[10px] text-slate-500 ml-2">({session.time})</span>
-                          </div>
-                          <button
-                            onClick={() => removeStepSession(session.id)}
-                            className="text-slate-500 hover:text-rose-400 text-xs font-bold px-1"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  ))}
                 </div>
               </div>
 
             </div>
           )}
 
-          {/* TAB 3: 100-DAY GOAL PROGRESS (PRESERVED) */}
-          {activeTab === 'progress' && (
+          {/* TAB: WORKOUT SPLIT */}
+          {activeTab === 'workout' && (
             <div className="space-y-6">
-              
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 text-center space-y-4">
-                <div className="inline-block p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 text-3xl">
-                  🏋️
-                </div>
-                <h2 className="text-2xl font-extrabold text-white">100-Day Gym Challenge Progress</h2>
-                <p className="text-xs text-slate-400 max-w-md mx-auto">
-                  You are currently at <strong className="text-emerald-400 font-bold">{gymDays} completed gym days</strong> out of your 100-day target for 2026. Only <strong className="text-white font-bold">{100 - gymDays} days left</strong>!
-                </p>
-
-                {/* Big Progress Bar */}
-                <div className="w-full bg-slate-900 border border-slate-700 h-6 rounded-full overflow-hidden p-1">
-                  <div
-                    className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-2 text-[10px] font-bold text-slate-950"
-                    style={{ width: `${Math.min((gymDays / 100) * 100, 100)}%` }}
-                  >
-                    {gymDays}%
-                  </div>
-                </div>
-
-                {/* Milestone Buttons */}
-                <div className="flex justify-center gap-3 pt-2">
-                  <button
-                    onClick={() => setGymDays(prev => Math.max(0, prev - 1))}
-                    className="bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs px-3 py-1.5 rounded-lg border border-slate-600"
-                  >
-                    -1 Day
-                  </button>
-                  <button
-                    onClick={() => setGymDays(prev => prev + 1)}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-1.5 rounded-lg shadow"
-                  >
-                    +1 Completed Day
-                  </button>
+              <div className="flex justify-between items-center bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                <div className="flex gap-2">
+                  {['Week 1', 'Week 2', 'Week 3', 'Week 4'].map(wk => (
+                    <button
+                      key={wk}
+                      onClick={() => setSelectedWeek(wk)}
+                      className={`px-3 py-1 text-xs font-semibold rounded-md transition ${selectedWeek === wk ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-700 text-slate-300'}`}
+                    >
+                      {wk}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Strategy Card */}
-              <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 space-y-3">
-                <h3 className="font-bold text-slate-200 text-sm">💡 Strategy Overview</h3>
-                <ul className="text-xs text-slate-400 space-y-2 list-disc pl-4 leading-relaxed">
-                  <li><strong>Target Rate:</strong> ~0.3 to 0.4 kg pure fat loss per week with 105–115g daily protein.</li>
-                  <li><strong>Lifting Pace:</strong> Stick to the 2-3s slow lowering (eccentric) tempo for all dumbbell press and row sets[cite: 1, 4].</li>
-                  <li><strong>Weekend Rest:</strong> Take Saturday and Sunday fully off to regenerate central nervous system recovery.</li>
-                </ul>
+              <div className="grid grid-cols-5 gap-2">
+                {['day1', 'day2', 'day3', 'day4', 'day5'].map((dKey, idx) => (
+                  <button
+                    key={dKey}
+                    onClick={() => setSelectedDay(dKey)}
+                    className={`p-2.5 rounded-xl border text-center transition ${selectedDay === dKey ? 'bg-slate-800 border-emerald-500 text-white' : 'bg-slate-900/60 border-slate-800 text-slate-400'}`}
+                  >
+                    <div className="text-xs font-bold">Day {idx + 1}</div>
+                  </button>
+                ))}
               </div>
 
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 sm:p-6 space-y-6">
+                <div>
+                  <div className="text-xs uppercase font-bold text-emerald-400">{selectedWeek} • {workoutLogs[selectedDay].focus}</div>
+                  <h2 className="text-xl font-extrabold text-white">{workoutLogs[selectedDay].title}</h2>
+                </div>
+
+                <div className="space-y-6">
+                  {workoutLogs[selectedDay].exercises.map((ex, exIdx) => (
+                    <div key={exIdx} className="bg-slate-900/80 border border-slate-700/80 rounded-xl p-4 space-y-3">
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <h3 className="font-bold text-slate-100 text-sm">{exIdx + 1}. {ex.name}</h3>
+                          <div className="text-xs text-emerald-300">💡 {ex.formCue}</div>
+                        </div>
+                        <span className="text-[11px] text-slate-400 bg-slate-800 px-2 py-1 rounded border border-slate-700">
+                          {ex.target}
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 pt-2">
+                        {ex.sets.map((set, sIdx) => (
+                          <div key={sIdx} className="grid grid-cols-12 gap-2 items-center bg-slate-800/60 p-1.5 rounded-lg border border-slate-700/50">
+                            <span className="col-span-2 text-xs font-bold text-slate-300">Set {sIdx + 1}</span>
+                            <input
+                              type="text"
+                              value={set.weight}
+                              onChange={(e) => handleSetChange(selectedDay, exIdx, sIdx, 'weight', e.target.value)}
+                              placeholder="kg"
+                              className="col-span-4 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white"
+                            />
+                            <input
+                              type="text"
+                              value={set.reps}
+                              onChange={(e) => handleSetChange(selectedDay, exIdx, sIdx, 'reps', e.target.value)}
+                              placeholder="reps"
+                              className="col-span-4 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white"
+                            />
+                            <button onClick={() => removeSet(selectedDay, exIdx, sIdx)} className="col-span-2 text-slate-500 hover:text-rose-400 text-xs">✕</button>
+                          </div>
+                        ))}
+                        <button onClick={() => addSet(selectedDay, exIdx)} className="text-xs text-emerald-400 font-semibold">+ Add Set</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: PROGRESS */}
+          {activeTab === 'progress' && (
+            <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 text-center space-y-4">
+              <h2 className="text-2xl font-extrabold text-white">100-Day Gym Goal</h2>
+              <div className="text-emerald-400 font-bold text-3xl">Day {gymDays} / 100</div>
+              <div className="w-full bg-slate-900 border border-slate-700 h-6 rounded-full overflow-hidden p-1">
+                <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${Math.min((gymDays / 100) * 100, 100)}%` }}></div>
+              </div>
             </div>
           )}
 
