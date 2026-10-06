@@ -3,235 +3,258 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fitness & Nutrition Tracker</title>
+  <title>Gym & Nutrition Tracker</title>
   <style>
     :root {
-      --bg-color: #f4f6f8;
-      --card-bg: #ffffff;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --text: #1f2937;
-      --text-light: #6b7280;
-      --border: #e5e7eb;
-      --success: #10b981;
-      --danger: #ef4444;
-      --accent: #f59e0b;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --accent-green: #34d399;
+      --accent-orange: #fb923c;
+      --accent-purple: #c084fc;
+      --accent-pink: #f472b6;
+      --danger: #f87171;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: var(--bg-color); color: var(--text); padding-bottom: 60px; }
-    
-    header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 1rem; position: sticky; top: 0; z-index: 100; }
-    .header-container { max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
-    h1 { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+    body { background-color: var(--bg); color: var(--text); padding: 16px; max-width: 800px; margin: 0 auto; padding-bottom: 60px; }
+
+    header { text-align: center; margin-bottom: 16px; }
+    h1 { font-size: 1.5rem; color: var(--primary); margin-bottom: 4px; }
+    .subtitle { font-size: 0.85rem; color: var(--text-muted); }
+
+    /* Gym Goal Badge Header */
+    .goal-card {
+      background: linear-gradient(135deg, #1e1b4b, #312e81);
+      border: 1px solid #4338ca;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .goal-info { display: flex; flex-direction: column; gap: 2px; }
+    .goal-title { font-size: 0.8rem; color: var(--accent-pink); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .goal-count { font-size: 1.4rem; font-weight: 800; color: #fff; }
+    .goal-sub { font-size: 0.75rem; color: #a5b4fc; }
+    .btn-goal { background: #6366f1; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .btn-goal:hover { background: #4f46e5; }
 
     /* Nav Tabs */
-    nav { background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; justify-content: center; }
-    .nav-tabs { max-width: 800px; width: 100%; display: flex; }
-    .tab-btn { flex: 1; padding: 0.75rem 0.5rem; text-align: center; border: none; background: none; font-weight: 600; color: var(--text-light); cursor: pointer; border-bottom: 3px solid transparent; }
-    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    nav { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tab-btn { flex: 1; padding: 10px; background: var(--card); border: 1px solid var(--card-border); color: var(--text-muted); font-weight: 600; border-radius: 8px; cursor: pointer; text-align: center; font-size: 0.9rem; }
+    .tab-btn.active { background: var(--primary); color: #0f172a; border-color: var(--primary); font-weight: 700; }
 
-    /* Layout */
-    main { max-width: 800px; margin: 1rem auto; padding: 0 1rem; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .card { background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border); padding: 1rem; margin-bottom: 1rem; }
-    .card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
+    /* Cards & Inputs */
+    .card { background-color: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .card-title { font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: var(--text); display: flex; justify-content: space-between; align-items: center; }
 
-    /* Controls & Forms */
-    .date-picker-bar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
-    input, select, button { padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
-    input[type="date"] { flex: 1; }
-    button { background-color: var(--primary); color: white; border: none; cursor: pointer; font-weight: 600; }
-    button:hover { background-color: var(--primary-hover); }
-    button.btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
-    button.btn-danger { background-color: var(--danger); }
-    button.btn-secondary { background-color: #6b7280; }
-
-    /* Summary Header */
-    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center; }
-    .stat-box { background: #f8fafc; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border); }
-    .stat-val { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
-    .stat-label { font-size: 0.75rem; color: var(--text-light); }
-
-    /* Meal Section Details */
-    .meal-block { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
-    .meal-block:last-child { border-bottom: none; }
-    .meal-header { font-weight: 600; margin-bottom: 0.5rem; display: flex; justify-content: space-between; }
-    .meal-options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem; }
-    .meal-item-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem; background: #f9fafb; padding: 0.5rem; border-radius: 4px; }
-    .meal-desc { font-size: 0.8rem; color: var(--text-light); display: block; }
+    input, select, textarea, button { background-color: var(--bg); border: 1px solid var(--card-border); color: var(--text); padding: 10px; border-radius: 8px; font-size: 0.9rem; width: 100%; }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); border-color: transparent; }
+    button { cursor: pointer; font-weight: 600; border: none; }
     
-    .add-custom-box { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; padding: 0.5rem; background: #eff6ff; border-radius: 6px; }
-    .add-custom-box input { flex: 1 1 120px; }
+    .btn-primary { background-color: var(--primary); color: #0f172a; }
+    .btn-primary:hover { background-color: #0284c7; }
+    .btn-purple { background-color: #a855f7; color: white; }
+    .btn-sm { padding: 4px 10px; font-size: 0.75rem; width: auto; border-radius: 6px; }
+    .btn-danger { background-color: transparent; color: var(--danger); border: 1px solid var(--danger); }
+    .btn-danger:hover { background-color: var(--danger); color: white; }
 
-    /* Logged list */
-    .logged-items { margin-top: 0.5rem; }
-    .logged-item { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0.5rem; background: #ecfdf5; border-radius: 4px; margin-top: 0.25rem; font-size: 0.85rem; }
+    /* Summary Bar */
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+    .stat-box { background: var(--bg); padding: 10px; border-radius: 8px; border: 1px solid var(--card-border); }
+    .stat-val { font-size: 1.2rem; font-weight: 700; }
+    .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
 
-    /* Step Counter Styling */
-    .step-display { font-size: 2.5rem; font-weight: 800; text-align: center; color: var(--primary); margin: 1rem 0; }
-    
-    /* Utility */
-    .form-group { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.75rem; }
-    label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); }
+    /* Meal Option Rows */
+    .meal-block { border-bottom: 1px solid var(--card-border); padding-bottom: 12px; margin-bottom: 12px; }
+    .meal-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .meal-row { display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 8px 10px; border-radius: 8px; margin-top: 6px; border: 1px solid var(--card-border); }
+    .meal-details { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* Table for logged entries */
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.85rem; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid var(--card-border); }
+    th { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; }
+
+    /* Steps Display */
+    .step-big { font-size: 2.8rem; font-weight: 800; color: var(--accent-green); text-align: center; margin: 12px 0; }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="header-container">
-      <h1>Fitness & Nutrition Tracker</h1>
-      <span id="display-date-str" style="font-size: 0.85rem; color: var(--text-light);"></span>
-    </div>
+    <h1>Gym & Nutrition Tracker</h1>
+    <p class="subtitle">Target: ~1,500–1,600 kcal | ~110–115g Protein</p>
   </header>
 
-  <!-- Navigation Bar: Workout First, Steps Separate -->
-  <nav>
-    <div class="nav-tabs">
-      <button class="tab-btn active" onclick="switchTab('tab-workout')">1. Workout</button>
-      <button class="tab-btn" onclick="switchTab('tab-nutrition')">2. Nutrition Log</button>
-      <button class="tab-btn" onclick="switchTab('tab-steps')">3. Step Count</button>
+  <!-- 100-Day Gym Goal Badge Header -->
+  <div class="goal-card">
+    <div class="goal-info">
+      <span class="goal-title">🔥 100-Day Gym Goal</span>
+      <span class="goal-count"><span id="gym-day-val">73</span> / 100 Days</span>
+      <span class="goal-sub" id="gym-remaining-sub">27 sessions left to reach goal!</span>
     </div>
+    <button class="btn-goal" onclick="incrementGymDay()">+ Log Gym Day</button>
+  </div>
+
+  <!-- Tab Bar: Workout Tab First -->
+  <nav>
+    <button class="tab-btn active" onclick="switchTab('tab-workout', this)">🏋️ Workout</button>
+    <button class="tab-btn" onclick="switchTab('tab-nutrition', this)">🥗 Nutrition</button>
+    <button class="tab-btn" onclick="switchTab('tab-steps', this)">👟 Steps</button>
   </nav>
 
   <main>
     <!-- TAB 1: WORKOUT -->
     <div id="tab-workout" class="tab-content active">
       <div class="card">
-        <div class="card-title">Workout Routine</div>
-        <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">Log your workout session details for today.</p>
-        <div class="form-group">
-          <label for="workout-type">Workout Name / Focus</label>
-          <input type="text" id="workout-type" placeholder="e.g. Upper Body Workout, Leg Day">
+        <div class="card-title">Today's Workout Log</div>
+        <p class="subtitle" style="margin-bottom: 12px;">Track your sets, weights, and reps for today.</p>
+        <div style="margin-bottom: 12px;">
+          <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Workout Focus / Session Name</label>
+          <input type="text" id="workout-type" placeholder="e.g. Day 1: Upper 1 (Push/Pull)">
         </div>
-        <div class="form-group">
-          <label for="workout-notes">Exercises & Sets Completed</label>
-          <textarea id="workout-notes" rows="6" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;" placeholder="• Incline DB Press: 3 sets x 10 reps&#10;• DB Rows: 3 sets x 12 reps"></textarea>
+        <div style="margin-bottom: 12px;">
+          <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Exercise Log & Sets</label>
+          <textarea id="workout-notes" rows="8" placeholder="• Incline DB Press: 5kgx10, 7.5kgx10, 10kgx4 -> 7.5kgx4&#10;• DB Rows: 7.5kgx10, 10kgx10, 12.5kgx8 -> 10kgx2&#10;• Overhead Press: 5kgx10, 7.5kgx8, 7.5kgx9&#10;• Face Pulls: 15kgx10, 20kgx10, 30kgx2 -> 25kgx8"></textarea>
         </div>
-        <button onclick="saveWorkout()">Save Workout Log</button>
+        <button class="btn-primary" onclick="saveWorkout()">Save Workout Session</button>
       </div>
     </div>
 
     <!-- TAB 2: NUTRITION LOG -->
     <div id="tab-nutrition" class="tab-content">
       
-      <!-- Date Selector for History -->
-      <div class="date-picker-bar">
-        <label for="log-date" style="font-weight: bold;">Log Date:</label>
-        <input type="date" id="log-date" onchange="loadDayData()">
-        <button class="btn-sm btn-secondary" onclick="setToday()">Today</button>
+      <!-- Date Switcher -->
+      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 16px;">
+        <label style="font-size: 0.85rem; font-weight: 600;">Date:</label>
+        <input type="date" id="log-date" onchange="loadDayData()" style="flex: 1;">
+        <button class="btn-sm btn-primary" style="padding: 10px;" onclick="setToday()">Today</button>
       </div>
 
-      <!-- Macro Summary Header -->
+      <!-- Daily Macro Tracker -->
       <div class="card">
         <div class="summary-grid">
           <div class="stat-box">
-            <div class="stat-val" id="total-cals">0</div>
-            <div class="stat-label">Total Calories (kcal)</div>
+            <div class="stat-val" style="color: var(--primary);" id="total-cals">0</div>
+            <div class="stat-label">Calories</div>
           </div>
           <div class="stat-box">
-            <div class="stat-val" id="total-protein">0g</div>
-            <div class="stat-label">Total Protein (g)</div>
+            <div class="stat-val" style="color: var(--accent-green);" id="total-protein">0g</div>
+            <div class="stat-label">Protein</div>
           </div>
           <div class="stat-box">
-            <div class="stat-val" id="logged-count">0</div>
-            <div class="stat-label">Items Logged</div>
+            <div class="stat-val" style="color: var(--accent-purple);" id="item-count">0</div>
+            <div class="stat-label">Logged</div>
           </div>
         </div>
       </div>
 
-      <!-- Meal Logging Blocks -->
+      <!-- Quick Add Pre-Decided Staples -->
       <div class="card">
-        <div class="card-title">Pre-Decided Staples & Meal Options</div>
+        <div class="card-title">Pre-Decided Staples</div>
 
         <!-- Breakfast -->
         <div class="meal-block">
-          <div class="meal-header">Breakfast</div>
-          <div class="meal-options">
-            <div class="meal-item-row">
-              <div>
-                <strong>Overnight Oats</strong>
-                <span class="meal-desc">30g Oats, 100ml HL Milk, Chia, Berries (~300 kcal | 12g Protein)</span>
-              </div>
-              <button class="btn-sm" onclick="logPredecided('Overnight Oats', 300, 12)">+ Log</button>
+          <div style="font-weight: 600; font-size: 0.9rem; color: var(--accent-orange);">Breakfast</div>
+          <div class="meal-row">
+            <div>
+              <strong style="font-size: 0.85rem;">Overnight Oats</strong>
+              <div class="meal-details">33g Oats, 100ml HL Milk, Chia, Cocoa, Berries</div>
             </div>
+            <button class="btn-sm btn-primary" onclick="logItem('Overnight Oats', 225, 9.5)">+ Log (225 kcal)</button>
           </div>
         </div>
 
         <!-- Coffee -->
         <div class="meal-block">
-          <div class="meal-header">Coffee</div>
-          <div class="meal-options">
-            <div class="meal-item-row">
-              <div>
-                <strong>Instant Coffee (No Sugar)</strong>
-                <span class="meal-desc">2-in-1 Coffee Sachet (~60 kcal | 0.5g Protein)</span>
-              </div>
-              <button class="btn-sm" onclick="logPredecided('Instant Coffee (No Sugar)', 60, 0.5)">+ Log</button>
+          <div style="font-weight: 600; font-size: 0.9rem; color: var(--accent-orange);">Coffee</div>
+          <div class="meal-row">
+            <div>
+              <strong style="font-size: 0.85rem;">Instant Coffee</strong>
+              <div class="meal-details">½ Sachet 2-in-1 Coffee (No Sugar)</div>
             </div>
+            <button class="btn-sm btn-primary" onclick="logItem('Instant Coffee (No Sugar)', 30, 0.5)">+ Log (30 kcal)</button>
           </div>
         </div>
 
         <!-- Snack -->
         <div class="meal-block">
-          <div class="meal-header">Snack</div>
-          <div class="meal-options">
-            <div class="meal-item-row">
-              <div>
-                <strong>Small Mandarin Orange / Apple</strong>
-                <span class="meal-desc">Fresh Fruit (~60 kcal | 0.5g Protein)</span>
-              </div>
-              <button class="btn-sm" onclick="logPredecided('Mandarin Orange/Apple', 60, 0.5)">+ Log</button>
+          <div style="font-weight: 600; font-size: 0.9rem; color: var(--accent-orange);">Snack</div>
+          <div class="meal-row">
+            <div>
+              <strong style="font-size: 0.85rem;">Small Mandarin Orange</strong>
+              <div class="meal-details">1 Tiny Fresh Mandarin</div>
             </div>
+            <button class="btn-sm btn-primary" onclick="logItem('Small Mandarin Orange', 35, 0.6)">+ Log (35 kcal)</button>
           </div>
         </div>
-
-        <!-- Custom / Add Your Own Tracker Section -->
-        <div class="card-title" style="margin-top: 1.5rem;">Add Custom / Deviated Dish</div>
-        <p style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 0.5rem;">If your meal isn't in the pre-decided list, enter details below with its calorie & protein breakdown.</p>
-        
-        <div class="add-custom-box">
-          <input type="text" id="custom-name" placeholder="Dish Name (e.g. Dabba Street)">
-          <input type="number" id="custom-cals" placeholder="Calories (kcal)" style="width: 100px;">
-          <input type="number" id="custom-protein" placeholder="Protein (g)" style="width: 100px;">
-          <button onclick="addCustomMeal()">+ Add Dish</button>
-        </div>
-
-        <!-- Add a Regular Manager -->
-        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed var(--border);">
-          <div class="card-title">Add a Regular Dish?</div>
-          <p style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 0.5rem;">Save dishes you frequently eat so they appear in your Quick-Add dropdown below.</p>
-          
-          <div class="add-custom-box" style="background: #fdf4ff;">
-            <input type="text" id="reg-name" placeholder="Regular Dish Name">
-            <input type="text" id="reg-desc" placeholder="Short Description">
-            <input type="number" id="reg-cals" placeholder="Calories" style="width: 90px;">
-            <input type="number" id="reg-protein" placeholder="Protein (g)" style="width: 90px;">
-            <button style="background-color: #8b5cf6;" onclick="saveRegularDish()">Save Regular</button>
-          </div>
-
-          <!-- Quick Log Regular Dropdown -->
-          <div style="margin-top: 1rem;">
-            <label for="regular-dropdown">Log from Saved Regulars:</label>
-            <div style="display: flex; gap: 0.5rem; margin-top: 0.25rem;">
-              <select id="regular-dropdown" style="flex: 1;">
-                <option value="">-- Select Saved Regular Meal --</option>
-              </select>
-              <button onclick="logSelectedRegular()">+ Log Meal</button>
-            </div>
-          </div>
-        </div>
-
       </div>
 
-      <!-- Logged Foods List for Selected Day -->
+      <!-- Add Your Own / Deviated Dish Tracker -->
       <div class="card">
-        <div class="card-title">Logged Foods for <span id="log-date-title"></span></div>
-        <div id="logged-meals-container" class="logged-items">
-          <!-- Dynamically populated entries -->
+        <div class="card-title">Add Custom / Deviated Dish</div>
+        <p class="subtitle" style="margin-bottom: 10px;">Enter details for any dish outside the staple menu.</p>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <input type="text" id="custom-name" placeholder="Dish Name (e.g. Dabba Street, Tofu Bhurji)">
+          <div style="display: flex; gap: 8px;">
+            <input type="number" id="custom-cals" placeholder="Calories (kcal)">
+            <input type="number" id="custom-protein" placeholder="Protein (g)">
+          </div>
+          <button class="btn-primary" onclick="addCustomMeal()">+ Add Meal Entry</button>
         </div>
+      </div>
+
+      <!-- Add a Regular Manager -->
+      <div class="card">
+        <div class="card-title">Add a Regular Dish?</div>
+        <p class="subtitle" style="margin-bottom: 10px;">Save frequently eaten meals so they appear in your dropdown list.</p>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+          <input type="text" id="reg-name" placeholder="Regular Dish Name">
+          <input type="text" id="reg-desc" placeholder="Short Breakdown / Description">
+          <div style="display: flex; gap: 8px;">
+            <input type="number" id="reg-cals" placeholder="Calories">
+            <input type="number" id="reg-protein" placeholder="Protein (g)">
+          </div>
+          <button class="btn-purple" onclick="saveRegularDish()">+ Save to Regulars</button>
+        </div>
+
+        <div style="border-top: 1px solid var(--card-border); padding-top: 10px; margin-top: 10px;">
+          <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Log from Saved Regulars:</label>
+          <div style="display: flex; gap: 8px;">
+            <select id="regular-dropdown" style="flex: 1;">
+              <option value="">-- Select Saved Regular Meal --</option>
+            </select>
+            <button class="btn-primary btn-sm" style="width: auto; padding: 0 12px;" onclick="logSelectedRegular()">+ Log</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logged Food List for Selected Date -->
+      <div class="card">
+        <div class="card-title">Logged Meals (<span id="log-date-title"></span>)</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Dish</th>
+              <th>Cals</th>
+              <th>Pro</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="meal-list-tbody">
+            <!-- Dynamic entries inserted here -->
+          </tbody>
+        </table>
       </div>
 
     </div>
@@ -240,208 +263,205 @@
     <div id="tab-steps" class="tab-content">
       <div class="card">
         <div class="card-title">Daily Step Counter</div>
-        <p style="font-size: 0.85rem; color: var(--text-light);">Track your step target for the selected date.</p>
+        <p class="subtitle">Track your daily steps for the selected date.</p>
         
-        <div class="step-display" id="step-display-val">0</div>
+        <div class="step-big" id="step-display-val">0</div>
         
-        <div class="form-group">
-          <label for="step-input">Log Steps Total</label>
+        <div style="margin-bottom: 12px;">
+          <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Enter Total Steps</label>
           <input type="number" id="step-input" placeholder="e.g. 8500">
         </div>
-        <button onclick="saveSteps()">Update Steps</button>
+        <button class="btn-primary" onclick="saveSteps()">Update Steps</button>
       </div>
     </div>
   </main>
 
   <script>
-    // State management
-    const TODAY_STR = new Date().toISOString().split('T')[0];
-    let currentDate = TODAY_STR;
-    
-    // Memory Storage Schema initialization
-    let db = JSON.parse(localStorage.getItem('fitness_tracker_db')) || {
-      logs: {},        // { 'YYYY-MM-DD': { meals: [], workout: '', steps: 0 } }
-      regulars: []     // [ { id, name, desc, cals, protein } ]
+    const TODAY = new Date().toISOString().split('T')[0];
+    let currentDate = TODAY;
+
+    let db = JSON.parse(localStorage.getItem('gym_tracker_db')) || {
+      gymDays: 73,
+      logs: {},
+      regulars: []
     };
 
     function initApp() {
       document.getElementById('log-date').value = currentDate;
+      renderGoalHeader();
       renderRegularsDropdown();
       loadDayData();
     }
 
-    function switchTab(tabId) {
+    function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
       
       document.getElementById(tabId).classList.add('active');
-      event.currentTarget.classList.add('active');
+      btn.classList.add('active');
+    }
+
+    function renderGoalHeader() {
+      document.getElementById('gym-day-val').innerText = db.gymDays;
+      const left = Math.max(0, 100 - db.gymDays);
+      document.getElementById('gym-remaining-sub').innerText = `${left} sessions left to reach 100-day goal!`;
+    }
+
+    function incrementGymDay() {
+      db.gymDays += 1;
+      saveDB();
+      renderGoalHeader();
     }
 
     function setToday() {
-      currentDate = TODAY_STR;
+      currentDate = TODAY;
       document.getElementById('log-date').value = currentDate;
       loadDayData();
     }
 
     function getDayRecord(date) {
       if (!db.logs[date]) {
-        db.logs[date] = { meals: [], workout: '', steps: 0 };
+        db.logs[date] = { meals: [], workout: '', workoutType: '', steps: 0 };
       }
       return db.logs[date];
     }
 
     function saveDB() {
-      localStorage.setItem('fitness_tracker_db', JSON.stringify(db));
+      localStorage.setItem('gym_tracker_db', JSON.stringify(db));
       loadDayData();
     }
 
     function loadDayData() {
-      currentDate = document.getElementById('log-date').value || TODAY_STR;
-      document.getElementById('display-date-str').innerText = currentDate;
+      currentDate = document.getElementById('log-date').value || TODAY;
       document.getElementById('log-date-title').innerText = currentDate;
 
-      const dayData = getDayRecord(currentDate);
+      const day = getDayRecord(currentDate);
 
       // Render Nutrition
-      let totalCals = 0;
-      let totalProtein = 0;
-      const container = document.getElementById('logged-meals-container');
-      container.innerHTML = '';
+      const tbody = document.getElementById('meal-list-tbody');
+      tbody.innerHTML = '';
+      let totCals = 0, totPro = 0;
 
-      if (dayData.meals.length === 0) {
-        container.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-light);">No items logged for this date yet.</p>';
+      if (day.meals.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="color: var(--text-muted); font-size: 0.8rem;">No items logged for this date yet.</td></tr>';
       } else {
-        dayData.meals.forEach((item, index) => {
-          totalCals += Number(item.cals || 0);
-          totalProtein += Number(item.protein || 0);
+        day.meals.forEach((item, index) => {
+          totCals += Number(item.cals || 0);
+          totPro += Number(item.protein || 0);
 
-          const div = document.createElement('div');
-          div.className = 'logged-item';
-          div.innerHTML = `
-            <div>
-              <strong>${item.name}</strong> 
-              <span style="color: var(--text-light);">(${item.cals} kcal | ${item.protein}g protein)</span>
-            </div>
-            <button class="btn-sm btn-danger" onclick="removeMeal(${index})">✕</button>
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${item.name}</strong></td>
+            <td style="color: var(--primary);">${item.cals}</td>
+            <td style="color: var(--accent-green);">${item.protein}g</td>
+            <td><button class="btn-danger btn-sm" onclick="removeMeal(${index})">✕</button></td>
           `;
-          container.appendChild(div);
+          tbody.appendChild(tr);
         });
       }
 
-      document.getElementById('total-cals').innerText = totalCals;
-      document.getElementById('total-protein').innerText = totalProtein.toFixed(1) + 'g';
-      document.getElementById('logged-count').innerText = dayData.meals.length;
+      document.getElementById('total-cals').innerText = Math.round(totCals);
+      document.getElementById('total-protein').innerText = Math.round(totPro) + 'g';
+      document.getElementById('item-count').innerText = day.meals.length;
 
       // Render Workout
-      document.getElementById('workout-notes').value = dayData.workout || '';
+      document.getElementById('workout-type').value = day.workoutType || '';
+      document.getElementById('workout-notes').value = day.workout || '';
 
       // Render Steps
-      document.getElementById('step-display-val').innerText = (dayData.steps || 0).toLocaleString();
-      document.getElementById('step-input').value = dayData.steps || '';
+      document.getElementById('step-display-val').innerText = (day.steps || 0).toLocaleString();
+      document.getElementById('step-input').value = day.steps || '';
     }
 
-    /* Nutrition Log Actions */
-    function logPredecided(name, cals, protein) {
-      const dayData = getDayRecord(currentDate);
-      dayData.meals.push({ name, cals, protein });
+    /* Nutrition Actions */
+    function logItem(name, cals, protein) {
+      const day = getDayRecord(currentDate);
+      day.meals.push({ name, cals, protein });
       saveDB();
     }
 
     function addCustomMeal() {
-      const nameInput = document.getElementById('custom-name');
-      const calsInput = document.getElementById('custom-cals');
-      const proteinInput = document.getElementById('custom-protein');
+      const name = document.getElementById('custom-name').value.trim();
+      const cals = parseFloat(document.getElementById('custom-cals').value) || 0;
+      const protein = parseFloat(document.getElementById('custom-protein').value) || 0;
 
-      const name = nameInput.value.trim();
-      const cals = parseFloat(calsInput.value) || 0;
-      const protein = parseFloat(proteinInput.value) || 0;
+      if (!name) return alert('Please enter dish name.');
 
-      if (!name) {
-        alert('Please enter a dish name.');
-        return;
-      }
+      const day = getDayRecord(currentDate);
+      day.meals.push({ name, cals, protein });
 
-      const dayData = getDayRecord(currentDate);
-      dayData.meals.push({ name, cals, protein });
-      
-      nameInput.value = '';
-      calsInput.value = '';
-      proteinInput.value = '';
+      document.getElementById('custom-name').value = '';
+      document.getElementById('custom-cals').value = '';
+      document.getElementById('custom-protein').value = '';
 
       saveDB();
     }
 
     function removeMeal(index) {
-      const dayData = getDayRecord(currentDate);
-      dayData.meals.splice(index, 1);
+      const day = getDayRecord(currentDate);
+      day.meals.splice(index, 1);
       saveDB();
     }
 
-    /* Regular Dishes Manager */
+    /* Regulars Manager */
     function saveRegularDish() {
       const name = document.getElementById('reg-name').value.trim();
       const desc = document.getElementById('reg-desc').value.trim();
       const cals = parseFloat(document.getElementById('reg-cals').value) || 0;
       const protein = parseFloat(document.getElementById('reg-protein').value) || 0;
 
-      if (!name) {
-        alert('Please enter a regular meal name.');
-        return;
-      }
+      if (!name) return alert('Please enter regular dish name.');
 
       db.regulars.push({ id: Date.now(), name, desc, cals, protein });
-      
+
       document.getElementById('reg-name').value = '';
       document.getElementById('reg-desc').value = '';
       document.getElementById('reg-cals').value = '';
       document.getElementById('reg-protein').value = '';
 
-      localStorage.setItem('fitness_tracker_db', JSON.stringify(db));
+      localStorage.setItem('gym_tracker_db', JSON.stringify(db));
       renderRegularsDropdown();
     }
 
     function renderRegularsDropdown() {
       const select = document.getElementById('regular-dropdown');
       select.innerHTML = '<option value="">-- Select Saved Regular Meal --</option>';
-      
+
       db.regulars.forEach(item => {
         const opt = document.createElement('option');
         opt.value = item.id;
-        opt.innerText = `${item.name} (${item.desc ? item.desc + ' - ' : ''}${item.cals} kcal / ${item.protein}g protein)`;
+        opt.innerText = `${item.name} (${item.cals} kcal / ${item.protein}g pro)`;
         select.appendChild(opt);
       });
     }
 
     function logSelectedRegular() {
-      const select = document.getElementById('regular-dropdown');
-      const regId = select.value;
-      if (!regId) return;
+      const id = document.getElementById('regular-dropdown').value;
+      if (!id) return;
 
-      const selected = db.regulars.find(r => r.id == regId);
-      if (selected) {
-        logPredecided(`${selected.name}`, selected.cals, selected.protein);
+      const found = db.regulars.find(r => r.id == id);
+      if (found) {
+        logItem(found.name, found.cals, found.protein);
       }
     }
 
     /* Workout Actions */
     function saveWorkout() {
-      const notes = document.getElementById('workout-notes').value;
-      const dayData = getDayRecord(currentDate);
-      dayData.workout = notes;
+      const day = getDayRecord(currentDate);
+      day.workoutType = document.getElementById('workout-type').value;
+      day.workout = document.getElementById('workout-notes').value;
       saveDB();
       alert('Workout saved for ' + currentDate);
     }
 
-    /* Step Counter Actions */
+    /* Steps Actions */
     function saveSteps() {
       const steps = parseInt(document.getElementById('step-input').value) || 0;
-      const dayData = getDayRecord(currentDate);
-      dayData.steps = steps;
+      const day = getDayRecord(currentDate);
+      day.steps = steps;
       saveDB();
     }
 
-    // Initialize application on page load
     window.onload = initApp;
   </script>
 </body>
