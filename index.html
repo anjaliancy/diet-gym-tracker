@@ -35,8 +35,8 @@
   <!-- NAVIGATION TABS -->
   <nav class="bg-slate-900/90 border-b border-slate-800 sticky top-[65px] z-40 backdrop-blur">
     <div class="max-w-xl mx-auto flex justify-around text-sm text-slate-400 font-medium">
-      <button id="tabBtnWorkout" onclick="switchTab('workout')" class="py-3 px-4 tab-active">🏋️ Workout</button>
-      <button id="tabBtnNutrition" onclick="switchTab('nutrition')" class="py-3 px-4">🥗 Nutrition</button>
+      <button id="tabBtnWorkout" onclick="switchTab('workout')" class="py-3 px-4">🏋️ Workout</button>
+      <button id="tabBtnNutrition" onclick="switchTab('nutrition')" class="py-3 px-4 tab-active">🥗 Nutrition</button>
       <button id="tabBtnSteps" onclick="switchTab('steps')" class="py-3 px-4">🚶 Steps</button>
     </div>
   </nav>
@@ -44,9 +44,7 @@
   <main class="max-w-xl mx-auto p-4">
 
     <!-- ==================== TAB 1: WORKOUT ==================== -->
-    <section id="tabWorkout" class="space-y-4">
-      
-      <!-- WEEK SELECTOR -->
+    <section id="tabWorkout" class="space-y-4 hidden">
       <div class="flex items-center justify-between bg-slate-800 p-2 rounded-lg border border-slate-700">
         <label class="text-xs font-bold text-slate-300 uppercase">Select Week:</label>
         <select id="weekSelector" onchange="renderWorkout()" class="text-xs rounded px-2 py-1 font-semibold text-emerald-400">
@@ -58,7 +56,6 @@
         </select>
       </div>
 
-      <!-- DAY SELECTOR -->
       <div class="grid grid-cols-5 gap-1" id="dayButtons">
         <button onclick="selectDay(1)" id="dayBtn1" class="py-2 text-xs font-bold rounded bg-emerald-600 text-white">Day 1</button>
         <button onclick="selectDay(2)" id="dayBtn2" class="py-2 text-xs font-bold rounded bg-slate-800 text-slate-400">Day 2</button>
@@ -72,13 +69,11 @@
         <span class="text-xs text-slate-400">Log Sets, Weights & Reps</span>
       </div>
 
-      <!-- WORKOUT EXERCISE CARDS CONTAINER -->
       <div id="exerciseContainer" class="space-y-4"></div>
-
     </section>
 
     <!-- ==================== TAB 2: NUTRITION ==================== -->
-    <section id="tabNutrition" class="space-y-4 hidden">
+    <section id="tabNutrition" class="space-y-4">
       <div class="flex items-center justify-between bg-slate-800 p-3 rounded-lg border border-slate-700">
         <div>
           <h2 class="font-bold text-emerald-300 text-sm">Daily Meal Tracker</h2>
@@ -125,58 +120,24 @@
   </main>
 
   <script>
-    // --- WORKOUT PROGRAM DATA SCHEME ---
+    const stapleMeals = [
+      { name: "Breakfast", defaultFood: "Overnight Oats (Oats + Marigold Milk + Berries)", cals: 350, protein: 15 },
+      { name: "Coffee", defaultFood: "Instant Coffee (No Sugar)", cals: 10, protein: 0 },
+      { name: "Mid-Morning Snack", defaultFood: "1 Apple or Orange", cals: 70, protein: 0 },
+      { name: "Lunch", defaultFood: "2 Chapatis + Tofu/Egg Bhurji & Spinach", cals: 420, protein: 24 },
+      { name: "Pre-Workout Snack", defaultFood: "1 Chobani Greek Yogurt", cals: 100, protein: 15 },
+      { name: "Post-Workout Shake", defaultFood: "Protein Powder + Marigold Milk", cals: 150, protein: 25 },
+      { name: "Afternoon Snack", defaultFood: "Apple Slices + 1 tbsp Peanut Butter", cals: 180, protein: 4 },
+      { name: "Dinner", defaultFood: "Chicken Breast ($3 pack) + 1 Chapati + Spinach", cals: 450, protein: 40 },
+      { name: "Dessert / Night Snack", defaultFood: "Marigold HL Milk / Greek Yogurt + Berries", cals: 150, protein: 10 }
+    ];
+
     const workoutProgram = {
-      1: {
-        title: "Day 1 - Upper 1",
-        exercises: [
-          { name: "Incline DB Press", target: "8-10 reps" },
-          { name: "Chest-Supported Row", target: "8-10 reps" },
-          { name: "Standing/Seated Overhead Press", target: "10-12 reps" },
-          { name: "Cable or Band Face Pulls", target: "12-15 reps" },
-          { name: "DB Bicep Curls", target: "10-12 reps" },
-          { name: "Overhead Tricep Extensions", target: "12-15 reps" }
-        ]
-      },
-      2: {
-        title: "Day 2 - Lower 1",
-        exercises: [
-          { name: "DB Goblet Squat", target: "8-10 reps" },
-          { name: "Barbell / DB Walking Lunges", target: "8-10 reps" },
-          { name: "DB Bulgarian Split Squat", target: "8-10 reps" },
-          { name: "Seated or Lying Leg Curl", target: "12-15 reps" },
-          { name: "Standing Calf Raises", target: "15 reps" }
-        ]
-      },
-      3: {
-        title: "Day 3 - Core & LISS",
-        exercises: [
-          { name: "Lying Reverse Crunches or Leg Raises", target: "12-15 reps" },
-          { name: "Cable Woodchoppers", target: "12-15 reps" },
-          { name: "Plank / Side Plank Hold", target: "45-60 sec" },
-          { name: "Zone 2 Cardio (Incline Treadmill Walk)", target: "20-30 min" },
-          { name: "Hip & Thoracic Mobility Flow", target: "8-10 reps" }
-        ]
-      },
-      4: {
-        title: "Day 4 - Upper 2",
-        exercises: [
-          { name: "Lat Pulldown or Single-Arm Pulldown", target: "8-10 reps" },
-          { name: "Flat DB Bench Press", target: "10-12 reps" },
-          { name: "Single-Arm DB Row", target: "12-15 reps" },
-          { name: "DB Lateral Raises", target: "12-15 reps" },
-          { name: "DB Hammer Curls", target: "10-12 reps" }
-        ]
-      },
-      5: {
-        title: "Day 5 - Lower 2",
-        exercises: [
-          { name: "DB Romanian Deadlift (RDL)", target: "8-10 reps" },
-          { name: "Leg Press / Goblet Squat", target: "10-12 reps" },
-          { name: "Cable Kickbacks / Glute Bridges", target: "12-15 reps" },
-          { name: "Lying or Seated Leg Curls", target: "10-12 reps" }
-        ]
-      }
+      1: { title: "Day 1 - Upper 1", exercises: [{ name: "Incline DB Press", target: "8-10 reps" }, { name: "Chest-Supported Row", target: "8-10 reps" }, { name: "Standing/Seated Overhead Press", target: "10-12 reps" }, { name: "Cable or Band Face Pulls", target: "12-15 reps" }, { name: "DB Bicep Curls", target: "10-12 reps" }, { name: "Overhead Tricep Extensions", target: "12-15 reps" }] },
+      2: { title: "Day 2 - Lower 1", exercises: [{ name: "DB Goblet Squat", target: "8-10 reps" }, { name: "Barbell / DB Walking Lunges", target: "8-10 reps" }, { name: "DB Bulgarian Split Squat", target: "8-10 reps" }, { name: "Seated or Lying Leg Curl", target: "12-15 reps" }, { name: "Standing Calf Raises", target: "15 reps" }] },
+      3: { title: "Day 3 - Core & LISS", exercises: [{ name: "Lying Reverse Crunches or Leg Raises", target: "12-15 reps" }, { name: "Cable Woodchoppers", target: "12-15 reps" }, { name: "Plank / Side Plank Hold", target: "45-60 sec" }, { name: "Zone 2 Cardio (Incline Treadmill Walk)", target: "20-30 min" }, { name: "Hip & Thoracic Mobility Flow", target: "8-10 reps" }] },
+      4: { title: "Day 4 - Upper 2", exercises: [{ name: "Lat Pulldown or Single-Arm Pulldown", target: "8-10 reps" }, { name: "Flat DB Bench Press", target: "10-12 reps" }, { name: "Single-Arm DB Row", target: "12-15 reps" }, { name: "DB Lateral Raises", target: "12-15 reps" }, { name: "DB Hammer Curls", target: "10-12 reps" }] },
+      5: { title: "Day 5 - Lower 2", exercises: [{ name: "DB Romanian Deadlift (RDL)", target: "8-10 reps" }, { name: "Leg Press / Goblet Squat", target: "10-12 reps" }, { name: "Cable Kickbacks / Glute Bridges", target: "12-15 reps" }, { name: "Lying or Seated Leg Curls", target: "10-12 reps" }] }
     };
 
     let selectedDay = 1;
@@ -186,6 +147,7 @@
       document.getElementById('nutritionDate').value = todayStr;
       document.getElementById('stepDate').value = todayStr;
       renderWorkout();
+      renderNutrition();
       loadStepDate();
     }
 
@@ -209,15 +171,59 @@
       }
     }
 
+    function renderNutrition() {
+      const date = document.getElementById('nutritionDate').value;
+      const container = document.getElementById('mealSlotsContainer');
+      container.innerHTML = "";
+
+      let totCals = 0;
+      let totProt = 0;
+
+      stapleMeals.forEach((meal, idx) => {
+        const key = `meal_${date}_${idx}`;
+        const saved = JSON.parse(localStorage.getItem(key) || JSON.stringify({ eaten: false, food: meal.defaultFood, cals: meal.cals, protein: meal.protein }));
+
+        if (saved.eaten) {
+          totCals += Number(saved.cals);
+          totProt += Number(saved.protein);
+        }
+
+        container.innerHTML += `
+          <div class="bg-emerald-card p-3 rounded-xl flex items-center justify-between text-xs">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" ${saved.eaten ? 'checked' : ''} onchange="toggleMeal('${key}', this.checked)" class="w-4 h-4 accent-emerald-500 rounded">
+              <div>
+                <div class="font-bold text-slate-100">${meal.name}</div>
+                <div class="text-slate-400 text-[11px]">${saved.food}</div>
+              </div>
+            </div>
+            <div class="text-right font-mono text-emerald-400">
+              <div>${saved.cals} kcal</div>
+              <div>${saved.protein}g protein</div>
+            </div>
+          </div>
+        `;
+      });
+
+      document.getElementById('nutritionTotals').innerText = `Calories: ${totCals} kcal | Protein: ${totProt}g`;
+    }
+
+    function toggleMeal(key, eaten) {
+      let saved = JSON.parse(localStorage.getItem(key));
+      saved.eaten = eaten;
+      localStorage.setItem(key, JSON.stringify(saved));
+      renderNutrition();
+    }
+
+    function loadNutritionDate() {
+      renderNutrition();
+    }
+
     function selectDay(day) {
       selectedDay = day;
       for (let i = 1; i <= 5; i++) {
         const btn = document.getElementById(`dayBtn${i}`);
-        if (i === day) {
-          btn.className = "py-2 text-xs font-bold rounded bg-emerald-600 text-white";
-        } else {
-          btn.className = "py-2 text-xs font-bold rounded bg-slate-800 text-slate-400";
-        }
+        btn.className = (i === day) ? "py-2 text-xs font-bold rounded bg-emerald-600 text-white" : "py-2 text-xs font-bold rounded bg-slate-800 text-slate-400";
       }
       renderWorkout();
     }
@@ -290,7 +296,6 @@
       loadStepDate();
     }
 
-    // Initialize initial counter state
     document.getElementById('gymGoalCounter').innerText = `Day ${localStorage.getItem('gymGoalCount') || '73'} / 100`;
     init();
   </script>
